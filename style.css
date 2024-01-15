@@ -1,0 +1,26 @@
+body{
+    background-size: cover;
+}
+
+.bg-1{ background-image: url('1.jpg'); }
+.bg-2{ background-image: url('2.jpg'); }
+.bg-3{ background-image: url('3.jpg'); }
+.bg-4{ background-image: url('4.jpg'); }
+.bg-5{ background-image: url('5.jpg'); }
+
+/* Styles to center the image */
+
+body {
+    background-color: black;
+    display: flex;
+    justify-content: center; /* Centers horizontally */
+    align-items: center; /* Centers vertically */
+    height: 100vh; /* Use the full height of the viewport */
+    margin: 0; /* Remove default margin */
+}
+
+img {
+    width: 120px;
+    max-width: 100%; /* Ensures the image is responsive */
+    max-height: 100vh; /* Ensures the image doesn't exceed the viewport height */
+}

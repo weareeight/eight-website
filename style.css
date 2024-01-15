@@ -2,11 +2,11 @@ body{
     background-size: cover;
 }
 
-.bg-1{ background-image: url('1.jpg'); }
-.bg-2{ background-image: url('2.jpg'); }
-.bg-3{ background-image: url('3.jpg'); }
-.bg-4{ background-image: url('4.jpg'); }
-.bg-5{ background-image: url('5.jpg'); }
+.bg-1{ background-image: url('https://imagedelivery.net/qpiIkEiBAB3IQSnVgHlbAQ/58312a3e-5b7e-4c65-cc76-fe35513b5400/bg'); }
+.bg-2{ background-image: url('https://imagedelivery.net/qpiIkEiBAB3IQSnVgHlbAQ/abc88fce-ca64-4ea1-b4c0-b32c48f96a00/bg'); }
+.bg-3{ background-image: url('https://imagedelivery.net/qpiIkEiBAB3IQSnVgHlbAQ/2aa7f455-6d87-4a14-d70a-75f3fbdebd00/bg'); }
+.bg-4{ background-image: url('https://imagedelivery.net/qpiIkEiBAB3IQSnVgHlbAQ/7fa7d449-064e-4506-d0d3-f1fb277fa300/bg'); }
+.bg-5{ background-image: url('https://imagedelivery.net/qpiIkEiBAB3IQSnVgHlbAQ/4d493cf7-1de4-4239-8200-16806a680c00/bg'); }
 
 /* Styles to center the image */
 

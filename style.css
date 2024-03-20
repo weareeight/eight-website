@@ -31,3 +31,12 @@ img.culture-100{
     top: 0;
     right: 100px;
 }
+
+@media (max-width: 768px) {
+    img.culture-100 {
+        width: 100px;
+        right: 50%; /* Center the badge horizontally */
+        transform: translateX(50%); /* Adjust the position to truly center it considering its own width */
+        top: 0px; /* Adjust if you want it closer or further from the top */
+    }
+}

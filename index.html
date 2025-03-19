@@ -1,25 +1,90 @@
-<!--
-
-Yes. The background images on this website are ridiculously big, they're hosted on CloudFlare though, so that makes it OK. I'm not sure why I'm even writing this, no one reads this stuff anyway.
-
--->
-
 <!DOCTYPE html>
-<html lang="en">
-
+<!--
+  _____ _       _     _       ______           _            _        
+ |  ___(_)     | |   | |      |  _  \         | |          | |       
+ | |__  _  __ _| |__ | |_ __ _| | | |_   _  __| |_ __   ___| |_ ___  
+ |  __|| |/ _` | '_ \| __/ _` | | | | | | |/ _` | '_ \ / _ \ __/ __| 
+ | |___| | (_| | | | | || (_| | |/ /| |_| | (_| | | | |  __/ |_\__ \ 
+ \____/|_|\__, |_| |_|\__\__,_|___/  \__,_|\__,_|_| |_|\___|\__|___/ 
+           __/ |                                                     
+          |___/                                                      
+-->
+<html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Eight</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="icon" type="image/png" href="favicon.png">
+    <meta name="description" content="The coolest digital products on the World Wide Web!">
+    <meta name="keywords" content="digital, products, web, cool, 90s, internet, cyberspace, information superhighway">
+    <meta name="author" content="Eight Digital">
+    <!-- Secret meta tag easter egg -->
+    <meta name="generator" content="Netscape Composer 4.0 and a lot of Mountain Dew">
+    <title>:: EIGHT DIGITAL :: UNDER CONSTRUCTION ::</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <!-- Background MIDI auto-play would go here if browsers still allowed it -->
+    <div class="container">
+        <div class="top-bar">
+            <img src="images/new.gif" alt="New!" class="blink">
+            <img src="images/under-construction.gif" alt="Under Construction">
+            <img src="images/new.gif" alt="New!" class="blink">
+        </div>
 
-  <img src="logo.png" alt="logo" class="logo" />
+        <table class="main-table" border="3" cellpadding="5" cellspacing="2">
+            <tr>
+                <td colspan="3" class="header">
+                    <h1><font color="lime">WELCOME TO EIGHT DIGITAL</font></h1>
+                    <marquee scrollamount="5" direction="left" behavior="alternate">
+                        <font size="+2" color="yellow">*** We Build Amazing Digital Products ***</font>
+                    </marquee>
+                </td>
+            </tr>
+            <tr>
+                <td class="sidebar">
+                    <div class="counter">
+                        <p>You are visitor #:</p>
+                        <img src="images/counter.gif" alt="12345">
+                    </div>
+                </td>
+                <td class="content">
+                    <!-- DVD Logo Canvas -->
+                    <div class="dvd-container">
+                        <canvas id="dvdCanvas" width="400" height="300"></canvas>
+                    </div>
+                    
+                    <h2>About Our Digital Products</h2>
+                    <p><font size="+1">We build <font color="red">AWESOME</font> digital products that will take your business to the <font color="blue">NEXT LEVEL</font>!</font></p>
+                    <p><b>Our expertise includes:</b></p>
+                    <ul>
+                        <li>Web Development <img src="images/fire.gif" alt="Hot!" /></li>
+                        <li>Apps</li>
+                        <li>Shopify</li>
+                        <li>And much much more!</li>
+                    </ul>
+                </td>
+                <td class="sidebar">
+                    <div class="badges">
+                        <img src="images/netscape.gif" alt="Best viewed in Netscape Navigator">
+                        <img src="images/ie.gif" alt="Compatible with Internet Explorer">
+                        <img src="images/valid.gif" alt="Valid CSS">
+                        <img src="images/800x600.gif" alt="Optimized for 800x600">
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="3" class="footer">
+                    <p>Contact us: <a href="mailto:hello@weareeight.com"><img src="images/email.gif" alt="Email"> hello@weareeight.com</a></p>
+                    <p>© 1998 Eight - Last updated: <span id="lastUpdated">March 19, 1998</span></p>
+                </td>
+            </tr>
+        </table>
+    </div>
 
-  <img src="culture-100.png" class="culture-100" />
+    <!-- Hidden Konami Code Easter Egg -->
+    <div id="konami-easter-egg" style="display: none;">
+        <img src="images/dancing.gif" alt="Dancing Baby">
+    </div>
 
-<script src="script.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>

@@ -1,90 +1,151 @@
 <!DOCTYPE html>
-<!--
-  _____ _       _     _       ______           _            _        
- |  ___(_)     | |   | |      |  _  \         | |          | |       
- | |__  _  __ _| |__ | |_ __ _| | | |_   _  __| |_ __   ___| |_ ___  
- |  __|| |/ _` | '_ \| __/ _` | | | | | | |/ _` | '_ \ / _ \ __/ __| 
- | |___| | (_| | | | | || (_| | |/ /| |_| | (_| | | | |  __/ |_\__ \ 
- \____/|_|\__, |_| |_|\__\__,_|___/  \__,_|\__,_|_| |_|\___|\__|___/ 
-           __/ |                                                     
-          |___/                                                      
--->
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="The coolest digital products on the World Wide Web!">
-    <meta name="keywords" content="digital, products, web, cool, 90s, internet, cyberspace, information superhighway">
-    <meta name="author" content="Eight Digital">
-    <!-- Secret meta tag easter egg -->
-    <meta name="generator" content="Netscape Composer 4.0 and a lot of Mountain Dew">
-    <title>:: EIGHT DIGITAL :: UNDER CONSTRUCTION ::</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>We Make Software</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #08080A; cursor: pointer; }
+        canvas { display: block; }
+    </style>
 </head>
 <body>
-    <!-- Background MIDI auto-play would go here if browsers still allowed it -->
-    <div class="container">
-        <div class="top-bar">
-            <img src="images/new.gif" alt="New!" class="blink">
-            <img src="images/under-construction.gif" alt="Under Construction">
-            <img src="images/new.gif" alt="New!" class="blink">
-        </div>
+    <canvas id="glitchCanvas"></canvas>
 
-        <table class="main-table" border="3" cellpadding="5" cellspacing="2">
-            <tr>
-                <td colspan="3" class="header">
-                    <h1><font color="lime">WELCOME TO EIGHT DIGITAL</font></h1>
-                    <marquee scrollamount="5" direction="left" behavior="alternate">
-                        <font size="+2" color="yellow">*** We Build Amazing Digital Products ***</font>
-                    </marquee>
-                </td>
-            </tr>
-            <tr>
-                <td class="sidebar">
-                    <div class="counter">
-                        <p>You are visitor #:</p>
-                        <img src="images/counter.gif" alt="12345">
-                    </div>
-                </td>
-                <td class="content">
-                    <!-- DVD Logo Canvas -->
-                    <div class="dvd-container">
-                        <canvas id="dvdCanvas" width="400" height="300"></canvas>
-                    </div>
-                    
-                    <h2>About Our Digital Products</h2>
-                    <p><font size="+1">We build <font color="red">AWESOME</font> digital products that will take your business to the <font color="blue">NEXT LEVEL</font>!</font></p>
-                    <p><b>Our expertise includes:</b></p>
-                    <ul>
-                        <li>Web Development <img src="images/fire.gif" alt="Hot!" /></li>
-                        <li>Apps</li>
-                        <li>Shopify</li>
-                        <li>And much much more!</li>
-                    </ul>
-                </td>
-                <td class="sidebar">
-                    <div class="badges">
-                        <img src="images/netscape.gif" alt="Best viewed in Netscape Navigator">
-                        <img src="images/ie.gif" alt="Compatible with Internet Explorer">
-                        <img src="images/valid.gif" alt="Valid CSS">
-                        <img src="images/800x600.gif" alt="Optimized for 800x600">
-                    </div>
-                </td>
-            </tr>
-            <tr>
-                <td colspan="3" class="footer">
-                    <p>Contact us: <a href="mailto:hello@weareeight.com"><img src="images/email.gif" alt="Email"> hello@weareeight.com</a></p>
-                    <p>© 1998 Eight - Last updated: <span id="lastUpdated">March 19, 1998</span></p>
-                </td>
-            </tr>
-        </table>
-    </div>
+    <script>
+        const canvas = document.getElementById('glitchCanvas');
+        const ctx = canvas.getContext('2d');
 
-    <!-- Hidden Konami Code Easter Egg -->
-    <div id="konami-easter-egg" style="display: none;">
-        <img src="images/dancing.gif" alt="Dancing Baby">
-    </div>
+        let width, height;
+        let dots = [];
 
-    <script src="script.js"></script>
+        // --- CLICK-DRIVEN GLITCH LEVEL ---
+        let glitchLevel = 0;
+        const maxGlitchLevel = 7; // The chaos caps out at this level
+
+        // --- BASE SETTINGS (for Glitch Level 1) ---
+        const config = {
+            dotRadius: 12,
+            dotColor: '#EAEAEA',
+            dotSpacingX: 50,
+            dotSpacingY: 50,
+            textContent: "we make software",
+            textFont: '24px "Courier New", Courier, monospace',
+            textColor: '#EAEAEA',
+            glitchColor1: 'rgba(0, 255, 255, 0.8)',
+            glitchColor2: 'rgba(255, 0, 255, 0.8)',
+            backgroundAlpha: 0.6,
+            
+            // Base values for glitch effects. These will be multiplied by the glitchLevel.
+            base: {
+                dotGlitchChance: 0.1,
+                dotGlitchIntensity: 5,
+                textGlitchChance: 0.1,
+                textGlitchIntensity: 2,
+                scanlineChance: 0.05,
+                scanlineIntensity: 10,
+                blockScrambleChance: 0.05,
+                blockScrambleCount: 2,
+                vJumpChance: 0.03,
+                vJumpIntensity: 2,
+                colorFlashChance: 0.01,
+                // --- THIS LINE HAS BEEN CHANGED ---
+                flashColor: 'rgba(0, 255, 0, 0.5)' // Was 'rgba(255, 255, 255, 0.5)'
+            }
+        };
+
+        class Dot {
+            constructor(baseX, baseY) { this.baseX = baseX; this.baseY = baseY; this.x = baseX; this.y = baseY; this.radius = config.dotRadius; }
+            draw() { ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2); ctx.fillStyle = config.dotColor; ctx.fill(); }
+            glitch(level) {
+                if (Math.random() < config.base.dotGlitchChance * level) {
+                    const intensity = config.base.dotGlitchIntensity * level;
+                    this.x = this.baseX + (Math.random() - 0.5) * intensity;
+                    this.y = this.baseY + (Math.random() - 0.5) * intensity;
+                } else { this.x = this.baseX; this.y = this.baseY; }
+                if (Math.random() < (config.base.dotGlitchChance / 2) * level) { this.drawAberration(config.glitchColor1, -4); this.drawAberration(config.glitchColor2, 4); }
+            }
+            drawAberration(color, offset) { ctx.beginPath(); ctx.arc(this.x + (Math.random() - 0.5) * offset, this.y + (Math.random() - 0.5) * offset, this.radius, 0, Math.PI * 2); ctx.fillStyle = color; ctx.fill(); }
+            reset() { this.x = this.baseX; this.y = this.baseY; }
+        }
+
+        function setup() {
+            width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight;
+            dots = [];
+            const centerX = width / 2; const centerY = height / 2;
+            const startX = centerX - config.dotSpacingX; const startY = centerY - config.dotSpacingY - 30;
+            for (let i = 0; i < 3; i++) { dots.push(new Dot(startX + i * config.dotSpacingX, startY)); }
+            for (let i = 0; i < 3; i++) { dots.push(new Dot(startX + i * config.dotSpacingX, startY + config.dotSpacingY)); }
+            for (let i = 0; i < 2; i++) { dots.push(new Dot(startX + i * config.dotSpacingX, startY + 2 * config.dotSpacingY)); }
+        }
+
+        function drawText(level) {
+            ctx.font = config.textFont; ctx.textAlign = 'center';
+            const textX = width / 2; const textY = height / 2 + config.dotSpacingY * 2 + 50;
+            if (level > 0 && Math.random() < config.base.textGlitchChance * level) {
+                const intensity = config.base.textGlitchIntensity * level;
+                const xOffset1 = (Math.random() - 0.5) * intensity; const yOffset1 = (Math.random() - 0.5) * intensity; ctx.fillStyle = config.glitchColor1; ctx.fillText(config.textContent, textX + xOffset1, textY + yOffset1);
+                const xOffset2 = (Math.random() - 0.5) * intensity; const yOffset2 = (Math.random() - 0.5) * intensity; ctx.fillStyle = config.glitchColor2; ctx.fillText(config.textContent, textX + xOffset2, textY + yOffset2);
+            }
+            ctx.fillStyle = config.textColor; ctx.fillText(config.textContent, textX, textY);
+        }
+
+        function runGlitches(level) {
+            // Scanlines
+            if (Math.random() < config.base.scanlineChance * level) {
+                const intensity = config.base.scanlineIntensity * level;
+                const y = Math.random() * height; const h = (Math.random() * 10) + 1; const xOffset = (Math.random() - 0.5) * intensity; ctx.drawImage(canvas, 0, y, width, h, xOffset, y, width, h);
+            }
+            // Block Scramble
+            if (Math.random() < config.base.blockScrambleChance * level) {
+                const count = Math.floor(config.base.blockScrambleCount * level);
+                for (let i = 0; i < count; i++) {
+                    const sx = Math.random() * width; const sy = Math.random() * height;
+                    const sw = width * Math.random() * 0.2; const sh = height * Math.random() * 0.1;
+                    const dx = Math.random() * width; const dy = Math.random() * height;
+                    ctx.drawImage(canvas, sx, sy, sw, sh, dx, dy, sw, sh);
+                }
+            }
+            // Vertical Jump
+            if (Math.random() < config.base.vJumpChance * level) {
+                const intensity = config.base.vJumpIntensity * level;
+                const yOffset = (Math.random() - 0.5) * intensity;
+                ctx.drawImage(canvas, 0, 0, width, height, 0, yOffset, width, height);
+            }
+            // Color Flash
+            if (Math.random() < config.base.colorFlashChance * level) {
+                ctx.fillStyle = config.base.flashColor; ctx.fillRect(0, 0, width, height);
+            }
+        }
+        
+        function animate() {
+            ctx.fillStyle = `rgba(8, 8, 10, ${config.backgroundAlpha})`;
+            ctx.fillRect(0, 0, width, height);
+
+            const hasGlitch = glitchLevel > 0;
+
+            dots.forEach(dot => {
+                if (hasGlitch) { dot.glitch(glitchLevel); } else { dot.reset(); }
+                dot.draw();
+            });
+            drawText(glitchLevel);
+            
+            if (hasGlitch) {
+                runGlitches(glitchLevel);
+            }
+            
+            requestAnimationFrame(animate);
+        }
+
+        // --- EVENT LISTENERS ---
+        window.addEventListener('resize', setup);
+        window.addEventListener('click', () => {
+            glitchLevel = Math.min(glitchLevel + 1, maxGlitchLevel);
+        });
+
+        // --- START ---
+        setup();
+        animate();
+    </script>
 </body>
 </html>

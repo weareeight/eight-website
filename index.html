@@ -7,6 +7,20 @@
     <style>
         body { margin: 0; overflow: hidden; background-color: #08080A; cursor: pointer; }
         canvas { display: block; }
+        
+        /* Respect user preference for reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+            body::before {
+                content: "Motion reduced for accessibility";
+                position: fixed;
+                top: 10px;
+                left: 10px;
+                color: #666;
+                font-size: 12px;
+                font-family: monospace;
+                z-index: 1000;
+            }
+        }
     </style>
 </head>
 <body>
@@ -22,6 +36,9 @@
         // --- CLICK-DRIVEN GLITCH LEVEL ---
         let glitchLevel = 0;
         const maxGlitchLevel = 7; // The chaos caps out at this level
+        
+        // --- ACCESSIBILITY: RESPECT REDUCED MOTION PREFERENCE ---
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
         // --- BASE SETTINGS (for Glitch Level 1) ---
         const config = {
@@ -125,13 +142,14 @@
             ctx.fillStyle = `rgba(8, 8, 10, ${config.backgroundAlpha})`;
             ctx.fillRect(0, 0, width, height);
 
-            const hasGlitch = glitchLevel > 0;
+            // Respect reduced motion preference - disable glitch effects but keep basic functionality
+            const hasGlitch = glitchLevel > 0 && !prefersReducedMotion;
 
             dots.forEach(dot => {
                 if (hasGlitch) { dot.glitch(glitchLevel); } else { dot.reset(); }
                 dot.draw();
             });
-            drawText(glitchLevel);
+            drawText(prefersReducedMotion ? 0 : glitchLevel);
             
             if (hasGlitch) {
                 runGlitches(glitchLevel);
@@ -143,7 +161,9 @@
         // --- EVENT LISTENERS ---
         window.addEventListener('resize', setup);
         window.addEventListener('click', () => {
-            glitchLevel = Math.min(glitchLevel + 1, maxGlitchLevel);
+            if (!prefersReducedMotion) {
+                glitchLevel = Math.min(glitchLevel + 1, maxGlitchLevel);
+            }
         });
 
         // --- START ---

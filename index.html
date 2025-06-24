@@ -50,7 +50,9 @@
                 vJumpIntensity: 2,
                 colorFlashChance: 0.01,
                 // --- THIS LINE HAS BEEN CHANGED ---
-                flashColor: 'rgba(0, 255, 0, 0.5)' // Was 'rgba(255, 255, 255, 0.5)'
+                flashColor: 'rgba(0, 255, 0, 0.5)', // Was 'rgba(255, 255, 255, 0.5)'
+                // Flash frequency limiter (max 3 per second at 60fps = 0.05 chance per frame)
+                maxFlashChance: 0.05
             }
         };
 
@@ -112,8 +114,9 @@
                 const yOffset = (Math.random() - 0.5) * intensity;
                 ctx.drawImage(canvas, 0, 0, width, height, 0, yOffset, width, height);
             }
-            // Color Flash
-            if (Math.random() < config.base.colorFlashChance * level) {
+            // Color Flash (capped at 3 flashes per second for accessibility)
+            const flashChance = Math.min(config.base.colorFlashChance * level, config.base.maxFlashChance);
+            if (Math.random() < flashChance) {
                 ctx.fillStyle = config.base.flashColor; ctx.fillRect(0, 0, width, height);
             }
         }

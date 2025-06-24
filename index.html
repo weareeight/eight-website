@@ -39,6 +39,19 @@
         
         // --- ACCESSIBILITY: RESPECT REDUCED MOTION PREFERENCE ---
         const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        
+        // --- BROKEN SCREEN EASTER EGG ---
+        let brokenState = {
+            isTriggered: false,
+            cracks: [],
+            smokeParticles: [],
+            sparks: [],
+            inputBuffer: '',
+            crackAnimationProgress: 0,
+            lastSparkTime: 0,
+            shakeIntensity: 0,
+            shakeDecay: 0.95
+        };
 
         // --- BASE SETTINGS (for Glitch Level 1) ---
         const config = {
@@ -88,6 +101,194 @@
             reset() { this.x = this.baseX; this.y = this.baseY; }
         }
 
+        // --- BROKEN SCREEN EFFECT CLASSES ---
+        class CrackLine {
+            constructor(startX, startY, angle, length, thickness) {
+                this.startX = startX;
+                this.startY = startY;
+                this.angle = angle;
+                this.maxLength = length;
+                this.thickness = thickness;
+                this.currentLength = 0;
+                this.branches = [];
+                this.isComplete = false;
+            }
+            
+            update() {
+                if (!this.isComplete) {
+                    this.currentLength += Math.random() * 8 + 2;
+                    if (this.currentLength >= this.maxLength) {
+                        this.currentLength = this.maxLength;
+                        this.isComplete = true;
+                        // Create branches
+                        if (Math.random() < 0.7 && this.branches.length < 3) {
+                            const branchAngle = this.angle + (Math.random() - 0.5) * Math.PI * 0.8;
+                            const branchLength = this.maxLength * (0.3 + Math.random() * 0.4);
+                            const endX = this.startX + Math.cos(this.angle) * this.currentLength;
+                            const endY = this.startY + Math.sin(this.angle) * this.currentLength;
+                            this.branches.push(new CrackLine(endX, endY, branchAngle, branchLength, this.thickness * 0.7));
+                        }
+                    }
+                }
+                this.branches.forEach(branch => branch.update());
+            }
+            
+            render() {
+                if (this.currentLength > 0) {
+                    const endX = this.startX + Math.cos(this.angle) * this.currentLength;
+                    const endY = this.startY + Math.sin(this.angle) * this.currentLength;
+                    
+                    ctx.strokeStyle = `rgba(20, 20, 20, 0.9)`;
+                    ctx.lineWidth = this.thickness;
+                    ctx.lineCap = 'round';
+                    ctx.beginPath();
+                    ctx.moveTo(this.startX, this.startY);
+                    ctx.lineTo(endX, endY);
+                    ctx.stroke();
+                    
+                    // Add glow effect
+                    ctx.strokeStyle = `rgba(60, 60, 60, 0.3)`;
+                    ctx.lineWidth = this.thickness * 2;
+                    ctx.stroke();
+                }
+                this.branches.forEach(branch => branch.render());
+            }
+        }
+
+        class SmokeParticle {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.vx = (Math.random() - 0.5) * 3;
+                this.vy = -Math.random() * 4 - 2;
+                this.size = Math.random() * 30 + 10;
+                this.maxSize = this.size * (3 + Math.random() * 4);
+                this.alpha = 0.9;
+                this.life = 1.0;
+                this.decay = 0.003 + Math.random() * 0.007;
+                this.turbulence = Math.random() * 0.04;
+                this.rotation = Math.random() * Math.PI * 2;
+                this.rotationSpeed = (Math.random() - 0.5) * 0.02;
+                this.scaleX = 0.8 + Math.random() * 0.4;
+                this.scaleY = 0.8 + Math.random() * 0.4;
+                this.wispiness = Math.random() * 0.3 + 0.2;
+            }
+            
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vx += (Math.random() - 0.5) * this.turbulence;
+                this.vy += (Math.random() - 0.5) * this.turbulence * 0.3;
+                this.vy *= 0.99; // Slight deceleration
+                this.size = Math.min(this.size + 0.8, this.maxSize);
+                this.life -= this.decay;
+                this.alpha = this.life * 0.7;
+                this.rotation += this.rotationSpeed;
+                return this.life > 0;
+            }
+            
+            render() {
+                if (this.alpha > 0) {
+                    ctx.save();
+                    ctx.translate(this.x, this.y);
+                    ctx.rotate(this.rotation);
+                    ctx.scale(this.scaleX, this.scaleY);
+                    
+                    // Create multiple overlapping gradients for wispy effect
+                    for (let i = 0; i < 3; i++) {
+                        const offsetX = (Math.random() - 0.5) * this.size * 0.3;
+                        const offsetY = (Math.random() - 0.5) * this.size * 0.3;
+                        const wispSize = this.size * (0.6 + i * 0.2);
+                        const wispAlpha = this.alpha * (0.4 - i * 0.1);
+                        
+                        const gradient = ctx.createRadialGradient(offsetX, offsetY, 0, offsetX, offsetY, wispSize);
+                        gradient.addColorStop(0, `rgba(80, 80, 80, ${wispAlpha})`);
+                        gradient.addColorStop(0.3, `rgba(60, 60, 60, ${wispAlpha * 0.8})`);
+                        gradient.addColorStop(0.7, `rgba(40, 40, 40, ${wispAlpha * 0.4})`);
+                        gradient.addColorStop(1, `rgba(20, 20, 20, 0)`);
+                        
+                        ctx.fillStyle = gradient;
+                        ctx.beginPath();
+                        ctx.arc(offsetX, offsetY, wispSize, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    
+                    ctx.restore();
+                }
+            }
+        }
+
+        class SparkEffect {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.branches = [];
+                this.life = 1.0;
+                this.decay = 0.05;
+                
+                // Create spark branches
+                const branchCount = 3 + Math.floor(Math.random() * 4);
+                for (let i = 0; i < branchCount; i++) {
+                    const angle = (Math.PI * 2 / branchCount) * i + Math.random() * 0.5;
+                    const length = 10 + Math.random() * 20;
+                    this.branches.push({
+                        angle: angle,
+                        length: length,
+                        segments: this.generateSegments(length)
+                    });
+                }
+            }
+            
+            generateSegments(length) {
+                const segments = [];
+                let currentLength = 0;
+                while (currentLength < length) {
+                    const segmentLength = 2 + Math.random() * 4;
+                    const offset = (Math.random() - 0.5) * 3;
+                    segments.push({ length: segmentLength, offset: offset });
+                    currentLength += segmentLength;
+                }
+                return segments;
+            }
+            
+            update() {
+                this.life -= this.decay;
+                return this.life > 0;
+            }
+            
+            render() {
+                if (this.life > 0) {
+                    const colors = ['#FFFFFF', '#00FFFF', '#FFFF00'];
+                    const color = colors[Math.floor(Math.random() * colors.length)];
+                    
+                    ctx.strokeStyle = color;
+                    ctx.lineWidth = 2;
+                    ctx.lineCap = 'round';
+                    ctx.globalAlpha = this.life;
+                    
+                    this.branches.forEach(branch => {
+                        let currentX = this.x;
+                        let currentY = this.y;
+                        
+                        ctx.beginPath();
+                        ctx.moveTo(currentX, currentY);
+                        
+                        branch.segments.forEach(segment => {
+                            const nextX = currentX + Math.cos(branch.angle) * segment.length + segment.offset;
+                            const nextY = currentY + Math.sin(branch.angle) * segment.length + segment.offset;
+                            ctx.lineTo(nextX, nextY);
+                            currentX = nextX;
+                            currentY = nextY;
+                        });
+                        
+                        ctx.stroke();
+                    });
+                    
+                    ctx.globalAlpha = 1;
+                }
+            }
+        }
+
         function setup() {
             width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight;
             dots = [];
@@ -96,6 +297,136 @@
             for (let i = 0; i < 3; i++) { dots.push(new Dot(startX + i * config.dotSpacingX, startY)); }
             for (let i = 0; i < 3; i++) { dots.push(new Dot(startX + i * config.dotSpacingX, startY + config.dotSpacingY)); }
             for (let i = 0; i < 2; i++) { dots.push(new Dot(startX + i * config.dotSpacingX, startY + 2 * config.dotSpacingY)); }
+        }
+
+        // --- BROKEN SCREEN FUNCTIONS ---
+        function initializeBrokenScreen() {
+            brokenState.isTriggered = true;
+            brokenState.cracks = [];
+            brokenState.smokeParticles = [];
+            brokenState.sparks = [];
+            brokenState.crackAnimationProgress = 0;
+            brokenState.shakeIntensity = 15; // Initial shake intensity
+            
+            // Create multiple crack origins for dramatic effect
+            const crackOrigins = [
+                { x: width * 0.3, y: height * 0.4 },
+                { x: width * 0.7, y: height * 0.3 },
+                { x: width * 0.5, y: height * 0.6 },
+                { x: width * 0.2, y: height * 0.7 },
+                { x: width * 0.8, y: height * 0.8 }
+            ];
+            
+            crackOrigins.forEach(origin => {
+                // Create main cracks radiating from each origin
+                const crackCount = 4 + Math.floor(Math.random() * 3);
+                for (let i = 0; i < crackCount; i++) {
+                    const angle = (Math.PI * 2 / crackCount) * i + (Math.random() - 0.5) * 0.8;
+                    const length = 100 + Math.random() * 200;
+                    const thickness = 2 + Math.random() * 4;
+                    brokenState.cracks.push(new CrackLine(origin.x, origin.y, angle, length, thickness));
+                }
+            });
+        }
+        
+        function updateBrokenEffects() {
+            if (!brokenState.isTriggered) return;
+            
+            // Update screen shake
+            if (brokenState.shakeIntensity > 0.1) {
+                brokenState.shakeIntensity *= brokenState.shakeDecay;
+            }
+            
+            // Update cracks
+            brokenState.cracks.forEach(crack => crack.update());
+            
+            // MASSIVELY increase smoke generation for dramatic effect
+            // Spawn smoke particles along crack lines (much more frequent)
+            if (Math.random() < 0.8) { // Increased from 0.3 to 0.8
+                brokenState.cracks.forEach(crack => {
+                    if (Math.random() < 0.4) { // Increased from 0.1 to 0.4
+                        const t = Math.random();
+                        const x = crack.startX + Math.cos(crack.angle) * crack.currentLength * t;
+                        const y = crack.startY + Math.sin(crack.angle) * crack.currentLength * t;
+                        brokenState.smokeParticles.push(new SmokeParticle(x, y));
+                        
+                        // Add extra smoke clusters for density
+                        if (Math.random() < 0.3) {
+                            brokenState.smokeParticles.push(new SmokeParticle(x + (Math.random() - 0.5) * 20, y + (Math.random() - 0.5) * 20));
+                        }
+                    }
+                });
+            }
+            
+            // Add much more random smoke from screen edges and center
+            if (Math.random() < 0.6) { // Increased from 0.2 to 0.6
+                const edge = Math.floor(Math.random() * 4);
+                let x, y;
+                switch(edge) {
+                    case 0: x = Math.random() * width; y = 0; break;
+                    case 1: x = width; y = Math.random() * height; break;
+                    case 2: x = Math.random() * width; y = height; break;
+                    case 3: x = 0; y = Math.random() * height; break;
+                }
+                brokenState.smokeParticles.push(new SmokeParticle(x, y));
+            }
+            
+            // Add smoke from random screen locations for thick coverage
+            if (Math.random() < 0.4) {
+                const x = Math.random() * width;
+                const y = Math.random() * height;
+                brokenState.smokeParticles.push(new SmokeParticle(x, y));
+            }
+            
+            // Update smoke particles
+            brokenState.smokeParticles = brokenState.smokeParticles.filter(particle => particle.update());
+            
+            // Spawn sparks along crack lines (respecting accessibility limits)
+            const now = Date.now();
+            if (now - brokenState.lastSparkTime > 400 && Math.random() < 0.3) { // Max ~2.5 sparks per second
+                brokenState.cracks.forEach(crack => {
+                    if (Math.random() < 0.05) {
+                        const t = Math.random();
+                        const x = crack.startX + Math.cos(crack.angle) * crack.currentLength * t;
+                        const y = crack.startY + Math.sin(crack.angle) * crack.currentLength * t;
+                        brokenState.sparks.push(new SparkEffect(x, y));
+                        brokenState.lastSparkTime = now;
+                    }
+                });
+            }
+            
+            // Update sparks
+            brokenState.sparks = brokenState.sparks.filter(spark => spark.update());
+        }
+        
+        function renderBrokenEffects() {
+            if (!brokenState.isTriggered) return;
+            
+            // Render smoke particles (behind everything)
+            if (!prefersReducedMotion) {
+                brokenState.smokeParticles.forEach(particle => particle.render());
+            }
+            
+            // Render cracks (on top of content)
+            brokenState.cracks.forEach(crack => crack.render());
+            
+            // Render sparks (on top of everything)
+            if (!prefersReducedMotion) {
+                brokenState.sparks.forEach(spark => spark.render());
+            }
+        }
+        
+        function checkForBrokenTrigger(key) {
+            brokenState.inputBuffer += key.toLowerCase();
+            if (brokenState.inputBuffer.length > 10) {
+                brokenState.inputBuffer = brokenState.inputBuffer.slice(-10);
+            }
+            
+            if (brokenState.inputBuffer.includes('broken') && !brokenState.isTriggered) {
+                if (!prefersReducedMotion) {
+                    initializeBrokenScreen();
+                }
+            }
         }
 
         function drawText(level) {
@@ -139,8 +470,25 @@
         }
         
         function animate() {
+            // Apply screen shake if broken and not reduced motion
+            let shakeX = 0, shakeY = 0;
+            if (brokenState.isTriggered && brokenState.shakeIntensity > 0.1 && !prefersReducedMotion) {
+                shakeX = (Math.random() - 0.5) * brokenState.shakeIntensity;
+                shakeY = (Math.random() - 0.5) * brokenState.shakeIntensity;
+                ctx.save();
+                ctx.translate(shakeX, shakeY);
+            }
+            
             ctx.fillStyle = `rgba(8, 8, 10, ${config.backgroundAlpha})`;
             ctx.fillRect(0, 0, width, height);
+
+            // Update broken screen effects first (smoke renders behind everything)
+            updateBrokenEffects();
+            
+            // Render smoke particles behind everything
+            if (brokenState.isTriggered && !prefersReducedMotion) {
+                brokenState.smokeParticles.forEach(particle => particle.render());
+            }
 
             // Respect reduced motion preference - disable glitch effects but keep basic functionality
             const hasGlitch = glitchLevel > 0 && !prefersReducedMotion;
@@ -155,6 +503,22 @@
                 runGlitches(glitchLevel);
             }
             
+            // Render broken screen effects on top
+            if (brokenState.isTriggered) {
+                // Render cracks on top of content
+                brokenState.cracks.forEach(crack => crack.render());
+                
+                // Render sparks on top of everything
+                if (!prefersReducedMotion) {
+                    brokenState.sparks.forEach(spark => spark.render());
+                }
+            }
+            
+            // Restore canvas if shake was applied
+            if (brokenState.isTriggered && brokenState.shakeIntensity > 0.1 && !prefersReducedMotion) {
+                ctx.restore();
+            }
+            
             requestAnimationFrame(animate);
         }
 
@@ -163,6 +527,14 @@
         window.addEventListener('click', () => {
             if (!prefersReducedMotion) {
                 glitchLevel = Math.min(glitchLevel + 1, maxGlitchLevel);
+            }
+        });
+        
+        // Listen for "broken" typing to trigger screen crack effect
+        window.addEventListener('keydown', (event) => {
+            // Only capture letter keys to avoid issues with special keys
+            if (event.key.length === 1 && event.key.match(/[a-zA-Z]/)) {
+                checkForBrokenTrigger(event.key);
             }
         });
 

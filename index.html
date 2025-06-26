@@ -324,20 +324,8 @@
                 });
             }
             
-            // Initialize glitch text - reduced for performance
+            // No multiple text instances - keep it clean
             chaosMode.chaosEffects.glitchText = [];
-            for (let i = 0; i < 8; i++) { // Reduced from 20 to 8
-                chaosMode.chaosEffects.glitchText.push({
-                    text: "we make software",
-                    x: Math.random() * width,
-                    y: Math.random() * height,
-                    vx: (Math.random() - 0.5) * 8, // Reduced speed
-                    vy: (Math.random() - 0.5) * 8,
-                    size: 16 + Math.random() * 16, // Smaller size range
-                    alpha: 0.7 + Math.random() * 0.3, // Higher minimum alpha
-                    color: '#EAEAEA'
-                });
-            }
         }
         
         function updateChaosMode() {
@@ -357,23 +345,7 @@
                 drop.alpha = 0.3 + Math.random() * 0.7;
             });
             
-            // Update glitch text
-            chaosMode.chaosEffects.glitchText.forEach(text => {
-                text.x += text.vx;
-                text.y += text.vy;
-                
-                // Bounce off edges
-                if (text.x < 0 || text.x > width) text.vx *= -1;
-                if (text.y < 0 || text.y > height) text.vy *= -1;
-                
-                // Random teleportation
-                if (Math.random() < 0.01) {
-                    text.x = Math.random() * width;
-                    text.y = Math.random() * height;
-                }
-                
-                text.alpha = 0.5 + Math.random() * 0.5;
-            });
+            // No glitch text to update
             
             // Update chaos effects intensities
             chaosMode.chaosEffects.screenTear = Math.random() * chaosMode.intensity;
@@ -426,21 +398,7 @@
             });
             ctx.globalAlpha = 1;
             
-            // Glitch text - multiple "we make software" in white
-            chaosMode.chaosEffects.glitchText.forEach(text => {
-                ctx.globalAlpha = text.alpha;
-                ctx.font = `${text.size}px "Courier New", Courier, monospace`; // Same font as original
-                ctx.fillStyle = text.color; // White color
-                ctx.fillText(text.text, text.x, text.y);
-                
-                // Add glitch duplicates in white with slight transparency
-                if (Math.random() < 0.3) {
-                    ctx.fillStyle = 'rgba(234, 234, 234, 0.5)'; // White with transparency
-                    ctx.fillText(text.text, text.x + 2, text.y + 2);
-                    ctx.fillStyle = 'rgba(234, 234, 234, 0.3)'; // White with more transparency
-                    ctx.fillText(text.text, text.x - 2, text.y - 2);
-                }
-            });
+            // No glitch text to render
             ctx.globalAlpha = 1;
             
             // Screen melt effect

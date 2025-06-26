@@ -35,7 +35,7 @@
 
         // --- CLICK-DRIVEN GLITCH LEVEL ---
         let glitchLevel = 0;
-        const maxGlitchLevel = 7; // The chaos caps out at this level
+        const maxGlitchLevel = 15; // Increased for ultimate chaos mode
         
         // --- ACCESSIBILITY: RESPECT REDUCED MOTION PREFERENCE ---
         const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -51,6 +51,23 @@
             lastSparkTime: 0,
             shakeIntensity: 0,
             shakeDecay: 0.95
+        };
+
+        // --- CHAOS MODE (Level 8+) ---
+        let chaosMode = {
+            isActive: false,
+            startTime: 0,
+            intensity: 0,
+            maxIntensity: 50,
+            chaosEffects: {
+                screenTear: 0,
+                pixelNoise: 0,
+                colorInversion: 0,
+                screenMelt: 0,
+                digitalRain: [],
+                glitchText: [],
+                explosionParticles: []
+            }
         };
 
         // --- BASE SETTINGS (for Glitch Level 1) ---
@@ -79,8 +96,8 @@
                 vJumpChance: 0.03,
                 vJumpIntensity: 2,
                 colorFlashChance: 0.01,
-                // --- THIS LINE HAS BEEN CHANGED ---
-                flashColor: 'rgba(0, 255, 0, 0.5)', // Was 'rgba(255, 255, 255, 0.5)'
+                // No more distracting green flashes
+                flashColor: 'rgba(0, 0, 0, 0)', // Disabled completely
                 // Flash frequency limiter (max 3 per second at 60fps = 0.05 chance per frame)
                 maxFlashChance: 0.05
             }
@@ -289,6 +306,156 @@
             }
         }
 
+        // --- CHAOS MODE FUNCTIONS ---
+        function initializeChaosMode() {
+            chaosMode.isActive = true;
+            chaosMode.startTime = Date.now();
+            chaosMode.intensity = 0;
+            
+            // Initialize digital rain - reduced for performance
+            chaosMode.chaosEffects.digitalRain = [];
+            for (let i = 0; i < 15; i++) { // Reduced from 50 to 15
+                chaosMode.chaosEffects.digitalRain.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height - height,
+                    speed: 3 + Math.random() * 6,
+                    char: String.fromCharCode(33 + Math.floor(Math.random() * 94)),
+                    alpha: Math.random()
+                });
+            }
+            
+            // Initialize glitch text - reduced for performance
+            chaosMode.chaosEffects.glitchText = [];
+            for (let i = 0; i < 8; i++) { // Reduced from 20 to 8
+                chaosMode.chaosEffects.glitchText.push({
+                    text: "we make software",
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    vx: (Math.random() - 0.5) * 8, // Reduced speed
+                    vy: (Math.random() - 0.5) * 8,
+                    size: 16 + Math.random() * 16, // Smaller size range
+                    alpha: 0.7 + Math.random() * 0.3, // Higher minimum alpha
+                    color: '#EAEAEA'
+                });
+            }
+        }
+        
+        function updateChaosMode() {
+            if (!chaosMode.isActive) return;
+            
+            const elapsed = Date.now() - chaosMode.startTime;
+            chaosMode.intensity = Math.min(elapsed / 100, chaosMode.maxIntensity); // Ramp up over 5 seconds
+            
+            // Update digital rain
+            chaosMode.chaosEffects.digitalRain.forEach(drop => {
+                drop.y += drop.speed;
+                if (drop.y > height + 50) {
+                    drop.y = -50;
+                    drop.x = Math.random() * width;
+                    drop.char = String.fromCharCode(33 + Math.floor(Math.random() * 94));
+                }
+                drop.alpha = 0.3 + Math.random() * 0.7;
+            });
+            
+            // Update glitch text
+            chaosMode.chaosEffects.glitchText.forEach(text => {
+                text.x += text.vx;
+                text.y += text.vy;
+                
+                // Bounce off edges
+                if (text.x < 0 || text.x > width) text.vx *= -1;
+                if (text.y < 0 || text.y > height) text.vy *= -1;
+                
+                // Random teleportation
+                if (Math.random() < 0.01) {
+                    text.x = Math.random() * width;
+                    text.y = Math.random() * height;
+                }
+                
+                text.alpha = 0.5 + Math.random() * 0.5;
+            });
+            
+            // Update chaos effects intensities
+            chaosMode.chaosEffects.screenTear = Math.random() * chaosMode.intensity;
+            chaosMode.chaosEffects.pixelNoise = Math.random() * chaosMode.intensity;
+            chaosMode.chaosEffects.colorInversion = Math.random() * chaosMode.intensity;
+            chaosMode.chaosEffects.screenMelt = Math.random() * chaosMode.intensity;
+        }
+        
+        function renderChaosMode() {
+            if (!chaosMode.isActive) return;
+            
+            // Screen tear effect - optimized
+            if (chaosMode.chaosEffects.screenTear > 10 && Math.random() < 0.3) { // Only 30% chance per frame
+                for (let i = 0; i < 3; i++) { // Reduced from 5 to 3
+                    const y = Math.random() * height;
+                    const h = 5 + Math.random() * 15; // Smaller tears
+                    const offset = (Math.random() - 0.5) * chaosMode.chaosEffects.screenTear * 0.5; // Reduced intensity
+                    ctx.drawImage(canvas, 0, y, width, h, offset, y, width, h);
+                }
+            }
+            
+            // Pixel noise - much more efficient
+            if (chaosMode.chaosEffects.pixelNoise > 15 && Math.random() < 0.1) { // Only 10% chance, higher threshold
+                // Create small noise patches instead of full screen
+                for (let i = 0; i < 5; i++) {
+                    const x = Math.random() * width;
+                    const y = Math.random() * height;
+                    const w = 20 + Math.random() * 40;
+                    const h = 20 + Math.random() * 40;
+                    
+                    ctx.fillStyle = `rgb(${Math.random() * 255}, ${Math.random() * 255}, ${Math.random() * 255})`;
+                    ctx.fillRect(x, y, w, h);
+                }
+            }
+            
+            // Color inversion flashes - DISABLED to remove white flashes
+            // if (chaosMode.chaosEffects.colorInversion > 25 && Math.random() < 0.05) {
+            //     ctx.globalCompositeOperation = 'difference';
+            //     ctx.fillStyle = 'white';
+            //     ctx.fillRect(0, 0, width, height);
+            //     ctx.globalCompositeOperation = 'source-over';
+            // }
+            
+            // Digital rain
+            ctx.font = '14px monospace';
+            chaosMode.chaosEffects.digitalRain.forEach(drop => {
+                ctx.globalAlpha = drop.alpha;
+                ctx.fillStyle = '#00FF00';
+                ctx.fillText(drop.char, drop.x, drop.y);
+            });
+            ctx.globalAlpha = 1;
+            
+            // Glitch text - multiple "we make software" in white
+            chaosMode.chaosEffects.glitchText.forEach(text => {
+                ctx.globalAlpha = text.alpha;
+                ctx.font = `${text.size}px "Courier New", Courier, monospace`; // Same font as original
+                ctx.fillStyle = text.color; // White color
+                ctx.fillText(text.text, text.x, text.y);
+                
+                // Add glitch duplicates in white with slight transparency
+                if (Math.random() < 0.3) {
+                    ctx.fillStyle = 'rgba(234, 234, 234, 0.5)'; // White with transparency
+                    ctx.fillText(text.text, text.x + 2, text.y + 2);
+                    ctx.fillStyle = 'rgba(234, 234, 234, 0.3)'; // White with more transparency
+                    ctx.fillText(text.text, text.x - 2, text.y - 2);
+                }
+            });
+            ctx.globalAlpha = 1;
+            
+            // Screen melt effect
+            if (chaosMode.chaosEffects.screenMelt > 15) {
+                for (let i = 0; i < 10; i++) {
+                    const x = Math.random() * width;
+                    const y = Math.random() * height * 0.8;
+                    const w = 20 + Math.random() * 100;
+                    const h = 10 + Math.random() * 50;
+                    const meltOffset = Math.random() * chaosMode.chaosEffects.screenMelt;
+                    ctx.drawImage(canvas, x, y, w, h, x, y + meltOffset, w, h);
+                }
+            }
+        }
+
         function setup() {
             width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight;
             dots = [];
@@ -470,6 +637,55 @@
         }
         
         function animate() {
+            // CHAOS MODE - When glitch level hits 8+, everything goes mental
+            if (chaosMode.isActive) {
+                // Pure black background for maximum chaos contrast
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.1)'; // Slight trail effect
+                ctx.fillRect(0, 0, width, height);
+                
+                // Update and render chaos
+                updateChaosMode();
+                
+                // Render dots with organized chaos
+                dots.forEach(dot => {
+                    // Moderate dot glitching for performance
+                    if (Math.random() < 0.4) { // Reduced from 80% to 40%
+                        dot.glitch(Math.min(chaosMode.intensity * 0.3, 10)); // Cap the intensity
+                    }
+                    dot.draw();
+                    
+                    // Add fewer ghost copies for performance
+                    if (Math.random() < 0.2) { // Only 20% chance per dot
+                        for (let i = 0; i < 2; i++) { // Reduced from 5 to 2 copies
+                            ctx.globalAlpha = 0.4;
+                            ctx.beginPath();
+                            ctx.arc(
+                                dot.x + (Math.random() - 0.5) * 30, // Reduced spread
+                                dot.y + (Math.random() - 0.5) * 30,
+                                dot.radius,
+                                0, Math.PI * 2
+                            );
+                            ctx.fillStyle = '#EAEAEA'; // Use white instead of random colors
+                            ctx.fill();
+                        }
+                    }
+                    ctx.globalAlpha = 1;
+                });
+                
+                // Extreme text glitching
+                drawText(chaosMode.intensity);
+                
+                // Run ALL glitch effects at maximum intensity
+                runGlitches(chaosMode.intensity);
+                
+                // Add chaos-specific effects
+                renderChaosMode();
+                
+                requestAnimationFrame(animate);
+                return;
+            }
+            
+            // Normal mode (levels 1-7)
             // Apply screen shake if broken and not reduced motion
             let shakeX = 0, shakeY = 0;
             if (brokenState.isTriggered && brokenState.shakeIntensity > 0.1 && !prefersReducedMotion) {
@@ -527,6 +743,11 @@
         window.addEventListener('click', () => {
             if (!prefersReducedMotion) {
                 glitchLevel = Math.min(glitchLevel + 1, maxGlitchLevel);
+                
+                // TRIGGER CHAOS MODE AT LEVEL 8+ - DIAL TO 11!
+                if (glitchLevel >= 8 && !chaosMode.isActive) {
+                    initializeChaosMode();
+                }
             }
         });
         

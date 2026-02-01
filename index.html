@@ -93,19 +93,9 @@
         }
 
         /* ── Keyframes ── */
-        @keyframes heroReveal {
-            from { opacity: 0; transform: translateY(30px) scale(0.97); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-
         @keyframes fadeUp {
             from { opacity: 0; transform: translateY(15px); }
             to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes gradientShift {
-            0%, 100% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
         }
 
         @keyframes scrollLine {
@@ -156,10 +146,40 @@
         }
 
         .nav-wordmark {
-            font-family: var(--font-display);
-            font-size: 18px;
-            font-weight: 500;
-            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+        }
+
+        /* ── Nav Logo ── */
+        .nav-logo {
+            width: 30px;
+            height: 30px;
+            display: block;
+        }
+
+        .nav-logo .dot {
+            fill: var(--fg);
+            opacity: 0;
+            transform-origin: center;
+            transform-box: fill-box;
+            transform: scale(0);
+            transition: opacity 0.4s var(--ease-out), transform 0.4s var(--ease-out);
+        }
+
+        /* Dots scale in row-by-row when nav becomes visible */
+        #nav.visible .nav-logo .dot {
+            opacity: 1;
+            transform: scale(1);
+        }
+        #nav.visible .nav-logo .dot-r1 { transition-delay: 0.1s; }
+        #nav.visible .nav-logo .dot-r2 { transition-delay: 0.2s; }
+        #nav.visible .nav-logo .dot-r3 { transition-delay: 0.3s; }
+
+        /* Nav hover flicker */
+        @keyframes navDotFlicker {
+            0%   { opacity: 1; }
+            50%  { opacity: 0.15; }
+            100% { opacity: 1; }
         }
 
         .nav-links {
@@ -191,20 +211,75 @@
         }
 
         .hero-title {
-            font-family: var(--font-display);
-            font-weight: 700;
-            font-size: clamp(80px, 16vw, 220px);
-            letter-spacing: -0.05em;
-            line-height: 0.9;
-            background: linear-gradient(135deg, var(--fg) 0%, var(--fg-muted) 50%, var(--fg) 100%);
-            background-size: 200% 200%;
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            animation:
-                heroReveal 1.2s var(--ease-out) 0.2s forwards,
-                gradientShift 8s var(--ease-in-out) 1.5s infinite;
+            font-size: 0;
+            line-height: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ── Hero Logo (Dot Grid) ── */
+        .hero-logo {
+            width: clamp(140px, 24vw, 320px);
+            height: auto;
+            display: block;
+        }
+
+        .hero-logo .dot {
+            fill: var(--fg);
             opacity: 0;
+            transform-origin: center;
+            transform-box: fill-box;
+        }
+
+        /* Constellation Snap: each dot flies in from a unique scattered position */
+        .hero-logo #dot-1 { animation: dotSnap1 0.7s var(--ease-out) 0.3s forwards, dotBreathe 6s var(--ease-in-out) 2.5s infinite; }
+        .hero-logo #dot-2 { animation: dotSnap2 0.7s var(--ease-out) 0.38s forwards, dotBreathe 6s var(--ease-in-out) 3.0s infinite; }
+        .hero-logo #dot-3 { animation: dotSnap3 0.7s var(--ease-out) 0.46s forwards, dotBreathe 6s var(--ease-in-out) 3.5s infinite; }
+        .hero-logo #dot-4 { animation: dotSnap4 0.7s var(--ease-out) 0.54s forwards, dotBreathe 6s var(--ease-in-out) 3.0s infinite; }
+        .hero-logo #dot-5 { animation: dotSnap5 0.7s var(--ease-out) 0.62s forwards, dotBreathe 6s var(--ease-in-out) 3.5s infinite; }
+        .hero-logo #dot-6 { animation: dotSnap6 0.7s var(--ease-out) 0.70s forwards, dotBreathe 6s var(--ease-in-out) 4.0s infinite; }
+        .hero-logo #dot-7 { animation: dotSnap7 0.7s var(--ease-out) 0.78s forwards, dotBreathe 6s var(--ease-in-out) 3.5s infinite; }
+        .hero-logo #dot-8 { animation: dotSnap8 0.7s var(--ease-out) 0.86s forwards, dotBreathe 6s var(--ease-in-out) 4.0s infinite; }
+
+        /* Scatter origins — dots converge from all directions */
+        @keyframes dotSnap1 {
+            from { opacity: 0; transform: translate(-180%, -220%) scale(0.4); }
+            to   { opacity: 1; transform: translate(0, 0) scale(1); }
+        }
+        @keyframes dotSnap2 {
+            from { opacity: 0; transform: translate(40%, -280%) scale(0.4); }
+            to   { opacity: 1; transform: translate(0, 0) scale(1); }
+        }
+        @keyframes dotSnap3 {
+            from { opacity: 0; transform: translate(200%, -160%) scale(0.4); }
+            to   { opacity: 1; transform: translate(0, 0) scale(1); }
+        }
+        @keyframes dotSnap4 {
+            from { opacity: 0; transform: translate(-240%, 60%) scale(0.4); }
+            to   { opacity: 1; transform: translate(0, 0) scale(1); }
+        }
+        @keyframes dotSnap5 {
+            from { opacity: 0; transform: translate(0, 0) scale(0); }
+            to   { opacity: 1; transform: translate(0, 0) scale(1); }
+        }
+        @keyframes dotSnap6 {
+            from { opacity: 0; transform: translate(260%, 40%) scale(0.4); }
+            to   { opacity: 1; transform: translate(0, 0) scale(1); }
+        }
+        @keyframes dotSnap7 {
+            from { opacity: 0; transform: translate(-160%, 240%) scale(0.4); }
+            to   { opacity: 1; transform: translate(0, 0) scale(1); }
+        }
+        @keyframes dotSnap8 {
+            from { opacity: 0; transform: translate(120%, 200%) scale(0.4); }
+            to   { opacity: 1; transform: translate(0, 0) scale(1); }
+        }
+
+        /* Breathing: diagonal luminance wave */
+        @keyframes dotBreathe {
+            0%, 100% { opacity: 1; }
+            50%      { opacity: 0.45; }
         }
 
         .hero-tagline {
@@ -213,7 +288,7 @@
             color: var(--fg-muted);
             margin-top: 24px;
             opacity: 0;
-            animation: fadeUp 0.8s var(--ease-out) 1s forwards;
+            animation: fadeUp 0.8s var(--ease-out) 1.6s forwards;
         }
 
         .hero-scroll-line {
@@ -224,7 +299,7 @@
             width: 1px;
             background: var(--fg-subtle);
             height: 0;
-            animation: scrollLine 1.2s var(--ease-out) 1.5s forwards;
+            animation: scrollLine 1.2s var(--ease-out) 2.2s forwards;
         }
 
         /* ── Products Section ── */
@@ -809,10 +884,13 @@
                 opacity: 1;
                 transform: none;
             }
-            .hero-title {
-                opacity: 1;
-                -webkit-text-fill-color: var(--fg);
-                background: none;
+            .hero-logo .dot {
+                opacity: 1 !important;
+                transform: none !important;
+            }
+            .nav-logo .dot {
+                opacity: 1 !important;
+                transform: none !important;
             }
             .hero-tagline {
                 opacity: 1;
@@ -833,7 +911,18 @@
     <!-- Navigation -->
     <nav id="nav">
         <div class="container">
-            <a href="#/" class="nav-wordmark">Eight</a>
+            <a href="#/" class="nav-wordmark" aria-label="Eight — home">
+                <svg class="nav-logo" viewBox="0 0 100 100" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+                    <circle class="dot dot-r1 dot-c1" cx="16" cy="16" r="10"/>
+                    <circle class="dot dot-r1 dot-c2" cx="50" cy="16" r="10"/>
+                    <circle class="dot dot-r1 dot-c3" cx="84" cy="16" r="10"/>
+                    <circle class="dot dot-r2 dot-c1" cx="16" cy="50" r="10"/>
+                    <circle class="dot dot-r2 dot-c2" cx="50" cy="50" r="10"/>
+                    <circle class="dot dot-r2 dot-c3" cx="84" cy="50" r="10"/>
+                    <circle class="dot dot-r3 dot-c1" cx="16" cy="84" r="10"/>
+                    <circle class="dot dot-r3 dot-c2" cx="50" cy="84" r="10"/>
+                </svg>
+            </a>
             <ul class="nav-links">
                 <li><a href="#products">Products</a></li>
             </ul>
@@ -843,7 +932,19 @@
     <!-- Main Content -->
     <main>
         <section class="hero" id="hero">
-            <h1 class="hero-title">Eight</h1>
+            <h1 class="hero-title">
+                <svg class="hero-logo" viewBox="0 0 100 100" aria-label="Eight" role="img" xmlns="http://www.w3.org/2000/svg">
+                    <title>Eight</title>
+                    <circle class="dot dot-r1 dot-c1" id="dot-1" cx="16" cy="16" r="10"/>
+                    <circle class="dot dot-r1 dot-c2" id="dot-2" cx="50" cy="16" r="10"/>
+                    <circle class="dot dot-r1 dot-c3" id="dot-3" cx="84" cy="16" r="10"/>
+                    <circle class="dot dot-r2 dot-c1" id="dot-4" cx="16" cy="50" r="10"/>
+                    <circle class="dot dot-r2 dot-c2" id="dot-5" cx="50" cy="50" r="10"/>
+                    <circle class="dot dot-r2 dot-c3" id="dot-6" cx="84" cy="50" r="10"/>
+                    <circle class="dot dot-r3 dot-c1" id="dot-7" cx="16" cy="84" r="10"/>
+                    <circle class="dot dot-r3 dot-c2" id="dot-8" cx="50" cy="84" r="10"/>
+                </svg>
+            </h1>
             <p class="hero-tagline">We make digital products.</p>
             <div class="hero-scroll-line"></div>
         </section>
@@ -901,6 +1002,24 @@
                 nav.classList.remove('scrolled');
             }
         }, { passive: true });
+
+        // ── Nav logo hover: counting flicker ──
+        const navWordmark = document.querySelector('.nav-wordmark');
+        if (navWordmark) {
+            navWordmark.addEventListener('mouseenter', () => {
+                const dots = navWordmark.querySelectorAll('.nav-logo .dot');
+                dots.forEach((dot, i) => {
+                    dot.style.animation = 'none';
+                    dot.offsetHeight;
+                    dot.style.animation = `navDotFlicker 0.12s var(--ease-out) ${i * 0.04}s forwards`;
+                });
+            });
+            navWordmark.addEventListener('mouseleave', () => {
+                navWordmark.querySelectorAll('.nav-logo .dot').forEach(dot => {
+                    dot.style.animation = '';
+                });
+            });
+        }
 
         // ── Product Data ──
         const products = [

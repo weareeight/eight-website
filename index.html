@@ -90,16 +90,162 @@
         @media (max-width: 768px) {
             .container { padding: 0 20px; }
         }
+
+        /* ── Keyframes ── */
+        @keyframes heroReveal {
+            from { opacity: 0; transform: translateY(30px) scale(0.97); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        @keyframes scrollLine {
+            from { height: 0; }
+            to { height: 60px; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* ── Nav ── */
+        #nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: 24px 0;
+            opacity: 0;
+            transform: translateY(-10px);
+            pointer-events: none;
+            transition:
+                opacity 0.6s var(--ease-out),
+                transform 0.6s var(--ease-out),
+                background 0.6s var(--ease-out),
+                padding 0.6s var(--ease-out);
+        }
+
+        #nav.visible {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        #nav.scrolled {
+            background: rgba(8, 8, 10, 0.92);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 16px 0;
+        }
+
+        #nav .container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .nav-wordmark {
+            font-family: var(--font-display);
+            font-size: 18px;
+            font-weight: 500;
+            letter-spacing: -0.02em;
+        }
+
+        .nav-links {
+            list-style: none;
+            display: flex;
+            gap: 24px;
+        }
+
+        .nav-links a {
+            font-size: 14px;
+            color: var(--fg-muted);
+            transition: color 0.3s var(--ease-out);
+        }
+
+        .nav-links a:hover {
+            color: var(--fg);
+        }
+
+        /* ── Hero ── */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .hero-title {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: clamp(80px, 16vw, 220px);
+            letter-spacing: -0.05em;
+            line-height: 0.9;
+            background: linear-gradient(135deg, var(--fg) 0%, var(--fg-muted) 50%, var(--fg) 100%);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation:
+                heroReveal 1.2s var(--ease-out) 0.2s forwards,
+                gradientShift 8s var(--ease-in-out) 1.5s infinite;
+            opacity: 0;
+        }
+
+        .hero-tagline {
+            font-family: var(--font-body);
+            font-size: clamp(16px, 2vw, 20px);
+            color: var(--fg-muted);
+            margin-top: 24px;
+            opacity: 0;
+            animation: fadeUp 0.8s var(--ease-out) 1s forwards;
+        }
+
+        .hero-scroll-line {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 1px;
+            background: var(--fg-subtle);
+            height: 0;
+            animation: scrollLine 1.2s var(--ease-out) 1.5s forwards;
+        }
     </style>
 </head>
 <body>
 
     <!-- Navigation -->
-    <nav id="nav"></nav>
+    <nav id="nav">
+        <div class="container">
+            <a href="#/" class="nav-wordmark">Eight</a>
+            <ul class="nav-links">
+                <li><a href="#products">Products</a></li>
+            </ul>
+        </div>
+    </nav>
 
     <!-- Main Content -->
     <main>
-        <section class="hero" id="hero"></section>
+        <section class="hero" id="hero">
+            <h1 class="hero-title">Eight</h1>
+            <p class="hero-tagline">We make digital products.</p>
+            <div class="hero-scroll-line"></div>
+        </section>
         <section class="products" id="products"></section>
     </main>
 
@@ -107,7 +253,31 @@
     <footer id="footer"></footer>
 
     <script>
-        // Application logic will be added in subsequent tasks
+        // ── Scroll-aware nav ──
+        const nav = document.getElementById('nav');
+        const hero = document.getElementById('hero');
+
+        // IntersectionObserver: show nav when hero is out of view
+        const heroObserver = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (!entry.isIntersecting) {
+                    nav.classList.add('visible');
+                } else {
+                    nav.classList.remove('visible');
+                }
+            });
+        }, { threshold: 0 });
+
+        heroObserver.observe(hero);
+
+        // Scroll listener: add scrolled class for compact nav style
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 60) {
+                nav.classList.add('scrolled');
+            } else {
+                nav.classList.remove('scrolled');
+            }
+        }, { passive: true });
     </script>
 
 </body>

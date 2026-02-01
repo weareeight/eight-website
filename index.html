@@ -491,10 +491,11 @@
 
         /* Atlas — topographic contour rings */
         .visual-atlas {
-            width: 45%;
-            height: 75%;
-            top: 5%;
-            right: 5%;
+            width: 55%;
+            aspect-ratio: 1;
+            height: auto;
+            top: -10%;
+            right: -10%;
             border-radius: 50%;
             border: 1px solid var(--card-accent);
         }
@@ -517,10 +518,11 @@
 
         /* Orbit — concentric circles radiating out */
         .visual-orbit {
-            width: 50%;
-            height: 70%;
-            top: 5%;
-            right: 5%;
+            width: 55%;
+            aspect-ratio: 1;
+            height: auto;
+            top: -5%;
+            right: -5%;
             border-radius: 50%;
             border: 1px solid var(--card-accent);
         }
@@ -596,6 +598,12 @@
             position: relative;
             z-index: 2;
             margin-top: 32px;
+            transition: opacity 0.2s var(--ease-out);
+        }
+
+        .product-expanded-content.closing {
+            opacity: 0;
+            pointer-events: none;
         }
 
         .product-expanded-desc {
@@ -1100,17 +1108,28 @@
 
             const card = productsGrid.querySelector('.product-card.expanded');
 
-            // Remove expanded state
             if (card) {
-                card.classList.remove('expanded');
+                // Step 1: Instantly hide expanded content (prevents cramming)
                 const content = card.querySelector('.product-expanded-content');
-                if (content) {
-                    // Wait for transition to finish before removing content
-                    closeTimeout = setTimeout(() => { content.remove(); closeTimeout = null; }, 400);
-                }
+                if (content) content.classList.add('closing');
+
+                const closeBtn = card.querySelector('.product-close-btn');
+                if (closeBtn) closeBtn.style.opacity = '0';
+
+                // Step 2: After content fades (200ms), collapse the card
+                closeTimeout = setTimeout(() => {
+                    card.classList.remove('expanded');
+                    productsGrid.classList.remove('has-expanded');
+
+                    // Step 3: After card transition (400ms), clean up DOM
+                    setTimeout(() => {
+                        if (content) content.remove();
+                        if (closeBtn) closeBtn.style.opacity = '';
+                        closeTimeout = null;
+                    }, 400);
+                }, 200);
             }
 
-            productsGrid.classList.remove('has-expanded');
             document.body.classList.remove('product-open');
             activeProduct = null;
 

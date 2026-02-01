@@ -7,9 +7,16 @@
     <meta name="description" content="Eight builds digital products — SaaS tools and Shopify themes crafted with precision.">
     <meta name="theme-color" content="#08080A">
 
+    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+
     <!-- Google Fonts: TASA Orbiter (variable, 400-800) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=TASA+Orbiter:wght@400..800&display=swap">
     <link href="https://fonts.googleapis.com/css2?family=TASA+Orbiter:wght@400..800&display=swap" rel="stylesheet">
 
     <style>
@@ -37,6 +44,7 @@
             --accent-relay: #4DBDB9;
             --accent-atlas: #B8A99A;
             --accent-orbit: #9B8EC4;
+            --accent-themestack: #C97B4B;
 
             /* Font stacks */
             --font-display: 'TASA Orbiter', sans-serif;
@@ -148,6 +156,8 @@
         .nav-wordmark {
             display: flex;
             align-items: center;
+            padding: 8px;
+            margin: -8px;
         }
 
         /* ── Nav Logo ── */
@@ -220,7 +230,7 @@
 
         /* ── Hero Logo (Dot Grid) ── */
         .hero-logo {
-            width: clamp(140px, 24vw, 320px);
+            width: clamp(52px, 9vw, 120px);
             height: auto;
             display: block;
         }
@@ -323,7 +333,7 @@
 
         .products-count {
             font-size: 13px;
-            color: var(--fg-subtle);
+            color: var(--fg-muted);
             letter-spacing: 0.05em;
         }
 
@@ -347,15 +357,16 @@
         .product-card:nth-child(6) { grid-column: span 5; }
         .product-card:nth-child(7) { grid-column: span 7; }
 
-        /* Row 4: Full-width finale */
-        .product-card:nth-child(8) { grid-column: 1 / -1; }
+        /* Row 4: Balanced pair (6+6) */
+        .product-card:nth-child(8) { grid-column: span 6; }
+        .product-card:nth-child(9) { grid-column: span 6; }
 
         @media (max-width: 768px) {
             .products-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
             .product-card:nth-child(n) { grid-column: span 1; }
-            .product-card:nth-child(8) { grid-column: span 2; }
+            .product-card:nth-child(9) { grid-column: span 2; }
         }
 
         @media (max-width: 520px) {
@@ -495,6 +506,30 @@
             transform: scale(1.04) rotate(1deg);
         }
 
+        /* Product card background image */
+        .product-card-image {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 55%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            opacity: 0.06;
+            transition: opacity 0.6s var(--ease-out);
+            pointer-events: none;
+            mask-image: linear-gradient(to left, rgba(0,0,0,0.5) 0%, transparent 80%);
+            -webkit-mask-image: linear-gradient(to left, rgba(0,0,0,0.5) 0%, transparent 80%);
+        }
+
+        .product-card:hover .product-card-image {
+            opacity: 0.12;
+        }
+
+        .product-card.expanded .product-card-image {
+            display: none;
+        }
+
         /* Signal — flowing horizontal waveform lines */
         .visual-signal {
             background: repeating-linear-gradient(
@@ -618,6 +653,17 @@
             border: 1px solid var(--card-accent);
         }
 
+        /* ThemeStack — stacked horizontal layers */
+        .visual-themestack {
+            background: repeating-linear-gradient(
+                180deg,
+                transparent 0px,
+                transparent 20px,
+                var(--card-accent) 20px,
+                var(--card-accent) 24px
+            );
+        }
+
         /* ── Scroll Reveal ── */
         .reveal {
             opacity: 0;
@@ -668,16 +714,32 @@
             opacity: 0.05;
         }
 
+        /* Instant close — disable all transitions when snapping back */
+        .products-grid.instant-close .product-card {
+            transition: none !important;
+        }
+
         /* ── Expanded Content ── */
         .product-expanded-content {
             position: relative;
             z-index: 2;
             margin-top: 32px;
-            transition: opacity 0.2s var(--ease-out);
         }
 
-        .product-expanded-content.closing {
+        /* Product expanded background image */
+        .product-expanded-image {
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 45%;
+            background-size: cover;
+            background-position: center;
+            mask-image: linear-gradient(to right, transparent 0%, rgba(0,0,0,0.3) 30%, rgba(0,0,0,0.5) 100%);
+            -webkit-mask-image: linear-gradient(to right, transparent 0%, rgba(0,0,0,0.3) 30%, rgba(0,0,0,0.5) 100%);
             opacity: 0;
+            animation: fadeIn 1.5s var(--ease-out) 0.2s forwards;
+            z-index: 1;
             pointer-events: none;
         }
 
@@ -693,10 +755,11 @@
 
         .product-expanded-features {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 36px;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 28px;
             padding-top: 36px;
             border-top: 1px solid var(--fg-subtle);
+            max-width: 55%;
         }
 
         .feature-item {
@@ -707,6 +770,7 @@
         .feature-item:nth-child(1) { animation-delay: 0.15s; }
         .feature-item:nth-child(2) { animation-delay: 0.2s; }
         .feature-item:nth-child(3) { animation-delay: 0.25s; }
+        .feature-item:nth-child(4) { animation-delay: 0.3s; }
 
         .feature-item h3 {
             font-family: var(--font-display);
@@ -772,7 +836,6 @@
             right: 16px;
             width: 44px;
             height: 44px;
-            display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
@@ -821,54 +884,120 @@
             .product-expanded-features {
                 grid-template-columns: 1fr;
                 gap: 24px;
+                max-width: 100%;
             }
 
             .products-grid.has-expanded .product-card.expanded {
                 padding: 32px 24px;
             }
+
+            .product-expanded-image {
+                display: none;
+            }
         }
 
         /* ── Footer ── */
         footer {
-            padding: 48px 0;
+            padding: 64px 0;
             border-top: 1px solid var(--fg-subtle);
             margin-top: 120px;
         }
 
         .footer-inner {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            text-align: left;
         }
 
-        .footer-brand {
-            font-family: var(--font-display);
-            font-size: 14px;
-            font-weight: 400;
+        .footer-quiet {
+            font-size: 12px;
             color: var(--fg-muted);
-            letter-spacing: -0.01em;
+            line-height: 1.7;
+            white-space: nowrap;
         }
 
-        .footer-links {
+        /* ── Cookie Consent ── */
+        .consent {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 200;
+            max-width: 340px;
+            opacity: 0;
+            transform: translateY(12px);
+            transition: opacity 0.5s var(--ease-out), transform 0.5s var(--ease-out);
+        }
+
+        .consent.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .consent.hiding {
+            opacity: 0;
+            transform: translateY(8px);
+            transition: opacity 0.3s var(--ease-in-out), transform 0.3s var(--ease-in-out);
+        }
+
+        .consent-inner {
             display: flex;
-            gap: 28px;
+            flex-direction: column;
+            gap: 16px;
+            padding: 20px;
+            background: rgba(15, 15, 17, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--fg-subtle);
         }
 
-        .footer-links a {
+        .consent-text {
             font-size: 13px;
             color: var(--fg-muted);
-            transition: color 0.3s var(--ease-out);
+            line-height: 1.5;
         }
 
-        .footer-links a:hover {
+        .consent-text strong {
+            color: var(--fg);
+            font-weight: 500;
+        }
+
+        .consent-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .consent-btn {
+            font-family: var(--font-body);
+            font-size: 12px;
+            font-weight: 500;
+            letter-spacing: 0.02em;
+            padding: 8px 16px;
+            border: 1px solid var(--fg-subtle);
+            background: transparent;
+            color: var(--fg-muted);
+            cursor: pointer;
+            transition: border-color 0.3s var(--ease-out), color 0.3s var(--ease-out), background 0.3s var(--ease-out);
+        }
+
+        .consent-btn:hover {
+            border-color: var(--fg-muted);
             color: var(--fg);
         }
 
-        @media (max-width: 520px) {
-            .footer-inner {
-                flex-direction: column;
-                gap: 20px;
-                text-align: center;
+        .consent-btn--accept {
+            border-color: var(--fg);
+            color: var(--fg);
+        }
+
+        .consent-btn--accept:hover {
+            background: var(--fg);
+            color: var(--bg);
+        }
+
+        @media (max-width: 480px) {
+            .consent {
+                right: 12px;
+                bottom: 12px;
+                left: 12px;
+                max-width: none;
             }
         }
 
@@ -906,6 +1035,7 @@
         }
     </style>
 </head>
+
 <body>
 
     <!-- Navigation -->
@@ -951,8 +1081,8 @@
         <section class="products" id="products">
             <div class="container">
                 <div class="products-header reveal">
-                    <span class="products-label">Products</span>
-                    <span class="products-count">01—08</span>
+                    <h2 class="products-label">Products</h2>
+                    <span class="products-count">01—09</span>
                 </div>
                 <div class="products-grid" id="productsGrid">
                     <!-- Cards injected by JS -->
@@ -965,13 +1095,7 @@
     <footer>
         <div class="container">
             <div class="footer-inner">
-                <span class="footer-brand">Eight — Digital Products</span>
-                <div class="footer-links">
-                    <a href="https://x.com" target="_blank" rel="noopener">X</a>
-                    <a href="mailto:hello@weareeight.com">Contact</a>
-                    <a href="#/">Terms</a>
-                    <a href="#/">Privacy</a>
-                </div>
+                <p class="footer-quiet">We're not currently hiring, and don't publicise our emails. We also don't have socials. We prefer the quiet.</p>
             </div>
         </div>
     </footer>
@@ -995,11 +1119,18 @@
         heroObserver.observe(hero);
 
         // Scroll listener: add scrolled class for compact nav style
+        let scrollTicking = false;
         window.addEventListener('scroll', () => {
-            if (window.scrollY > 60) {
-                nav.classList.add('scrolled');
-            } else {
-                nav.classList.remove('scrolled');
+            if (!scrollTicking) {
+                requestAnimationFrame(() => {
+                    if (window.scrollY > 60) {
+                        nav.classList.add('scrolled');
+                    } else {
+                        nav.classList.remove('scrolled');
+                    }
+                    scrollTicking = false;
+                });
+                scrollTicking = true;
             }
         }, { passive: true });
 
@@ -1024,91 +1155,111 @@
         // ── Product Data ──
         const products = [
             {
-                slug: 'signal', name: 'Signal', tag: 'Analytics',
-                desc: 'Real-time analytics that surface what matters.',
-                longDesc: 'Signal cuts through noise to give teams the metrics they actually need. Real-time dashboards, smart anomaly detection, and data pipelines that connect any source.',
+                slug: 'kitenzo', name: 'Kitenzo', tag: 'Shopify App',
+                desc: 'Intelligent product bundling for Shopify stores.',
+                longDesc: 'Kitenzo helps merchants create dynamic product bundles that adapt to customer behaviour. Smart recommendations, A/B testing, and analytics built in.',
                 accent: '#E8A849', visual: 'signal',
                 features: [
-                    { title: 'Live Dashboards', desc: 'Custom dashboards that update in real-time with the metrics your team cares about.' },
-                    { title: 'Smart Alerts', desc: 'Anomaly detection that learns your patterns and alerts only when it matters.' },
-                    { title: 'Data Pipelines', desc: 'Connect any source. Transform, aggregate, and route data without writing ETL code.' }
+                    { title: 'Bundle Builder', desc: 'Create dynamic product bundles with flexible pricing rules and discount tiers.' },
+                    { title: 'Smart Recommendations', desc: 'ML-powered suggestions that learn from your catalogue and customer behaviour.' },
+                    { title: 'Analytics Dashboard', desc: 'Track bundle performance, conversion rates, and average order value in real-time.' },
+                    { title: 'A/B Testing', desc: 'Test bundle configurations against each other and let the data decide.' }
                 ]
             },
             {
-                slug: 'forge', name: 'Forge', tag: 'Developer Tools',
-                desc: 'A development environment built for speed.',
-                longDesc: 'Forge handles the infrastructure so your team can focus on shipping product. Instant environments, built-in CI/CD, and real-time collaboration.',
-                accent: '#5B8DEF', visual: 'forge',
-                features: [
-                    { title: 'Instant Environments', desc: 'Spin up full-stack dev environments in seconds, not hours.' },
-                    { title: 'Built-in CI/CD', desc: 'Push to deploy with zero configuration. Preview environments for every branch.' },
-                    { title: 'Team Sync', desc: 'Real-time collaboration with shared terminals and live code review.' }
-                ]
-            },
-            {
-                slug: 'meridian', name: 'Meridian', tag: 'Project Management',
-                desc: 'Project management stripped to its core.',
-                longDesc: 'Meridian gives teams structure without ceremony, so work flows naturally. Adaptive boards, timeline views, and automations that reduce busywork.',
-                accent: '#6BAF8D', visual: 'meridian',
-                features: [
-                    { title: 'Adaptive Boards', desc: 'Workflows that reshape themselves based on how your team actually works.' },
-                    { title: 'Timeline View', desc: 'See the big picture without losing the details. Drag, adjust, ship.' },
-                    { title: 'Automations', desc: 'Reduce busywork with rules that trigger on status, assignee, or custom fields.' }
-                ]
-            },
-            {
-                slug: 'vault', name: 'Vault', tag: 'Security',
-                desc: 'Enterprise-grade secrets management.',
-                longDesc: 'Vault makes security the path of least resistance. Zero-knowledge encryption, automatic credential rotation, and drop-in SDKs for any stack.',
-                accent: '#7B6FD4', visual: 'vault',
-                features: [
-                    { title: 'Zero-Knowledge', desc: 'Your secrets are encrypted end-to-end. We never see them. Nobody does.' },
-                    { title: 'Rotation Engine', desc: 'Automatic credential rotation with zero downtime and full audit trails.' },
-                    { title: 'SDK & CLI', desc: 'Drop-in integration for any stack. One line to fetch a secret, anywhere.' }
-                ]
-            },
-            {
-                slug: 'prism', name: 'Prism', tag: 'Design Systems',
-                desc: 'Build and maintain design systems at scale.',
-                longDesc: 'Prism bridges the gap between design intent and production code. Token management, component libraries, and two-way Figma sync.',
+                slug: 'eight-themes', name: 'Eight Themes', tag: 'Shopify Themes',
+                desc: 'Premium Shopify themes, crafted for conversion.',
+                longDesc: 'A collection of high-performance Shopify themes designed for modern commerce. Every theme is built for speed, accessibility, and conversion.',
                 accent: '#D4708F', visual: 'prism',
                 features: [
-                    { title: 'Token Management', desc: 'Define once, use everywhere. Colours, spacing, and type scales that stay in sync.' },
-                    { title: 'Component Library', desc: 'Production-ready components with built-in accessibility and documentation.' },
-                    { title: 'Figma Sync', desc: 'Two-way sync between Figma and code. Change a token, update everywhere.' }
+                    { title: 'Performance First', desc: 'Sub-second load times. Lighthouse scores that stay in the green, every time.' },
+                    { title: 'Visual Editor', desc: 'Full theme customisation through Shopify\'s native editor. No code required.' },
+                    { title: 'Commerce Optimised', desc: 'Conversion-focused layouts, smart upsells, and accessibility baked in.' },
+                    { title: 'Accessible by Default', desc: 'WCAG 2.1 AA compliant out of the box. Screen readers, keyboard nav, all covered.' }
                 ]
             },
             {
-                slug: 'relay', name: 'Relay', tag: 'Communications',
-                desc: 'Unified messaging infrastructure.',
-                longDesc: 'Relay handles email, push, SMS, and in-app notifications through a single API. Omnichannel routing, dynamic templates, and real-time delivery intelligence.',
+                slug: 'pass', name: 'Pass', tag: 'Authentication',
+                desc: 'Drop-in authentication that just works.',
+                longDesc: 'Pass handles sign-up, login, MFA, and session management so you can focus on your product. One SDK, every platform, zero configuration headaches.',
+                accent: '#7B6FD4', visual: 'vault',
+                features: [
+                    { title: 'One-Line Setup', desc: 'Add authentication to any app with a single SDK call. Works everywhere.' },
+                    { title: 'Multi-Factor Auth', desc: 'TOTP, WebAuthn, and SMS verification with zero additional configuration.' },
+                    { title: 'Session Management', desc: 'Secure, stateless sessions with automatic refresh and device tracking.' },
+                    { title: 'User Dashboard', desc: 'Pre-built account pages your users can manage themselves. Fully brandable.' }
+                ]
+            },
+            {
+                slug: 'threadguard', name: 'ThreadGuard', tag: 'Content Safety',
+                desc: 'Real-time content moderation at scale.',
+                longDesc: 'ThreadGuard scans text, images, and video for harmful content before it reaches your users. ML-powered detection, configurable thresholds, and human review workflows.',
                 accent: '#4DBDB9', visual: 'relay',
                 features: [
-                    { title: 'Omnichannel', desc: 'One API to reach users on any channel. Smart routing picks the right one.' },
-                    { title: 'Template Engine', desc: 'Dynamic templates with logic, loops, and personalisation. No code required.' },
-                    { title: 'Delivery Intel', desc: 'Know exactly what was delivered, opened, and clicked. In real-time.' }
+                    { title: 'ML Detection', desc: 'Multi-modal scanning across text, images, and video with high accuracy.' },
+                    { title: 'Custom Rules', desc: 'Define your own moderation policies with flexible rule engines and thresholds.' },
+                    { title: 'Review Queue', desc: 'Built-in human review workflows for edge cases, with audit trails.' },
+                    { title: 'Real-Time API', desc: 'Sub-100ms response times. Screen content before it ever reaches your users.' }
                 ]
             },
             {
-                slug: 'atlas', name: 'Atlas', tag: 'Data Platform',
-                desc: 'A unified data layer for complex data.',
-                longDesc: 'Atlas connects, transforms, and serves data across your entire organisation. Universal connectors, SQL-based transforms, and a shared semantic layer.',
+                slug: 'kaizen', name: 'Kaizen', tag: 'Workflow',
+                desc: 'Continuous improvement for product teams.',
+                longDesc: 'Kaizen tracks experiments, measures outcomes, and surfaces insights so teams can iterate with confidence. Built for teams that ship often and learn fast.',
+                accent: '#6BAF8D', visual: 'meridian',
+                features: [
+                    { title: 'Experiment Tracking', desc: 'Log hypotheses, track A/B tests, and measure results in one place.' },
+                    { title: 'Impact Metrics', desc: 'Connect experiments to business outcomes. See what actually moved the needle.' },
+                    { title: 'Team Insights', desc: 'Aggregate learnings across teams. Never repeat a failed experiment.' },
+                    { title: 'Retrospectives', desc: 'Structured retro templates that turn reflection into actionable next steps.' }
+                ]
+            },
+            {
+                slug: 'big', name: 'Big', tag: 'Data Analytics',
+                desc: 'Big data made surprisingly simple.',
+                longDesc: 'Big connects to your data wherever it lives and makes it queryable in seconds. No data engineering required. SQL or natural language — your choice.',
                 accent: '#B8A99A', visual: 'atlas',
                 features: [
-                    { title: 'Universal Connectors', desc: 'Pull from databases, APIs, warehouses, and spreadsheets. All normalised.' },
-                    { title: 'Transformation Layer', desc: 'SQL-based transforms with version control and automated testing.' },
-                    { title: 'Semantic Layer', desc: 'Define metrics once. Every team queries the same source of truth.' }
+                    { title: 'Universal Connect', desc: 'Pull from databases, APIs, warehouses, and spreadsheets. All normalised.' },
+                    { title: 'Natural Language', desc: 'Ask questions in plain English. Get SQL-quality results without writing a query.' },
+                    { title: 'Instant Dashboards', desc: 'Auto-generated visualisations that update in real-time as data changes.' },
+                    { title: 'Scheduled Reports', desc: 'Automated reports delivered to Slack, email, or any webhook on your schedule.' }
                 ]
             },
             {
-                slug: 'orbit', name: 'Orbit', tag: 'Infrastructure',
-                desc: 'Cloud infrastructure that manages itself.',
-                longDesc: 'Orbit handles provisioning, scaling, and monitoring so your team ships features instead of fighting fires. Auto-scaling, observability, and global edge deployment.',
+                slug: 'agm', name: 'AGM', tag: 'Governance',
+                desc: 'Annual meetings and governance, streamlined.',
+                longDesc: 'AGM digitises shareholder communications, proxy voting, and board reporting. Compliance built in, friction taken out.',
+                accent: '#5B8DEF', visual: 'forge',
+                features: [
+                    { title: 'Proxy Voting', desc: 'Secure digital proxy voting with real-time tallying and full audit trails.' },
+                    { title: 'Board Portal', desc: 'Centralised document management, meeting scheduling, and resolution tracking.' },
+                    { title: 'Compliance Engine', desc: 'Automated compliance checks against regulatory frameworks. Always audit-ready.' },
+                    { title: 'Shareholder Comms', desc: 'Automated notices, circular distribution, and RSVP tracking in one place.' }
+                ]
+            },
+            {
+                slug: 'interval', name: 'Interval', tag: 'Scheduling',
+                desc: 'Time management for teams that value theirs.',
+                longDesc: 'Interval coordinates calendars, availability, and meeting preferences across your entire organisation. Less scheduling, more doing.',
                 accent: '#9B8EC4', visual: 'orbit',
                 features: [
-                    { title: 'Auto-Scaling', desc: 'Traffic spikes handled automatically. Pay only for what you use.' },
-                    { title: 'Observability', desc: 'Logs, metrics, and traces in one place. Find issues before users do.' },
-                    { title: 'Global Edge', desc: 'Deploy to 50+ regions. Your app, fast everywhere, configured in one file.' }
+                    { title: 'Smart Scheduling', desc: 'Find the perfect meeting time across any number of participants, automatically.' },
+                    { title: 'Availability Sync', desc: 'Real-time calendar sync across Google, Outlook, and iCal. Always accurate.' },
+                    { title: 'Meeting Insights', desc: 'Track meeting load, no-show rates, and time allocation across teams.' },
+                    { title: 'Focus Time', desc: 'Automatically block deep-work periods and protect them from meeting creep.' }
+                ]
+            },
+            {
+                slug: 'themestack', name: 'ThemeStack', tag: 'Theme Platform',
+                desc: 'Build, test, and deploy Shopify themes faster.',
+                longDesc: 'ThemeStack gives theme developers a local-to-live pipeline with hot reloading, version control integration, and automated cross-browser testing.',
+                accent: '#C97B4B', visual: 'themestack',
+                features: [
+                    { title: 'Hot Reload', desc: 'See changes instantly in your browser as you edit theme files locally.' },
+                    { title: 'Version Control', desc: 'Git-native workflow with branch previews and rollback for every theme.' },
+                    { title: 'Cross-Browser Testing', desc: 'Automated visual regression testing across browsers and devices.' },
+                    { title: 'Theme CLI', desc: 'Scaffold, lint, and publish themes from the command line. Fast and scriptable.' }
                 ]
             }
         ];
@@ -1127,6 +1278,7 @@
 
             card.innerHTML = `
                 <div class="product-visual visual-${product.visual}"></div>
+                <div class="product-card-image" data-bg="images/eight-themes.webp"></div>
                 <div class="product-card-arrow">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg>
                 </div>
@@ -1171,6 +1323,8 @@
             // Clear any pending close timeout and remove existing expanded content
             if (closeTimeout) { clearTimeout(closeTimeout); closeTimeout = null; }
             productsGrid.querySelectorAll('.product-expanded-content').forEach(el => el.remove());
+            productsGrid.querySelectorAll('.product-expanded-image').forEach(el => el.remove());
+            productsGrid.querySelectorAll('.product-close-btn').forEach(el => el.remove());
             productsGrid.querySelectorAll('.product-card.expanded').forEach(c => c.classList.remove('expanded'));
 
             // Create expanded content
@@ -1209,6 +1363,12 @@
             `;
             card.appendChild(content);
 
+            // Add background image with gradient fade
+            const bgImage = document.createElement('div');
+            bgImage.className = 'product-expanded-image';
+            bgImage.style.backgroundImage = 'url(images/eight-themes.webp)';
+            card.appendChild(bgImage);
+
             // Set expanded state
             productsGrid.classList.add('has-expanded');
             card.classList.add('expanded');
@@ -1224,29 +1384,30 @@
 
         function closeProduct() {
             if (!activeProduct) return;
+            if (closeTimeout) { clearTimeout(closeTimeout); closeTimeout = null; }
 
             const card = productsGrid.querySelector('.product-card.expanded');
 
             if (card) {
-                // Step 1: Instantly hide expanded content (prevents cramming)
+                // Remove expanded content and close button from DOM immediately
                 const content = card.querySelector('.product-expanded-content');
-                if (content) content.classList.add('closing');
-
+                if (content) content.remove();
                 const closeBtn = card.querySelector('.product-close-btn');
-                if (closeBtn) closeBtn.style.opacity = '0';
+                if (closeBtn) closeBtn.remove();
+                const bgImage = card.querySelector('.product-expanded-image');
+                if (bgImage) bgImage.remove();
 
-                // Step 2: After content fades (200ms), collapse the card
-                closeTimeout = setTimeout(() => {
-                    card.classList.remove('expanded');
-                    productsGrid.classList.remove('has-expanded');
+                // Disable transitions for instant snap-back (no animation on close)
+                productsGrid.classList.add('instant-close');
+                card.classList.remove('expanded');
+                productsGrid.classList.remove('has-expanded');
 
-                    // Step 3: After card transition (400ms), clean up DOM
-                    setTimeout(() => {
-                        if (content) content.remove();
-                        if (closeBtn) closeBtn.style.opacity = '';
-                        closeTimeout = null;
-                    }, 400);
-                }, 200);
+                // Re-enable transitions on next frame
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        productsGrid.classList.remove('instant-close');
+                    });
+                });
             }
 
             document.body.classList.remove('product-open');
@@ -1306,6 +1467,94 @@
         }
 
         observeReveals();
+
+        // ── Lazy-load background images ──
+        const lazyBgObserver = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    const el = entry.target;
+                    el.style.backgroundImage = `url(${el.dataset.bg})`;
+                    lazyBgObserver.unobserve(el);
+                }
+            });
+        }, { rootMargin: '200px 0px' });
+
+        document.querySelectorAll('[data-bg]').forEach((el) => {
+            lazyBgObserver.observe(el);
+        });
+    </script>
+
+    <!-- Cookie Consent -->
+    <div class="consent" id="consent" role="dialog" aria-label="Cookie consent" aria-describedby="consentDesc">
+        <div class="consent-inner">
+            <p class="consent-text" id="consentDesc">
+                <strong>Want to be tracked by Google?</strong> That's all we use — Google Analytics. Nothing else.
+            </p>
+            <div class="consent-actions">
+                <button class="consent-btn" id="consentDecline">Rather not</button>
+                <button class="consent-btn consent-btn--accept" id="consentAccept">Sure, go ahead</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ── Cookie Consent & Conditional GA ──
+        (function() {
+            var GA_ID = 'G-QGQHJ9SM6G';
+            var CONSENT_KEY = 'eight-analytics';
+            var consent = localStorage.getItem(CONSENT_KEY);
+
+            function loadGA() {
+                if (document.querySelector('script[src*="googletagmanager"]')) return;
+                var s = document.createElement('script');
+                s.async = true;
+                s.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_ID;
+                document.head.appendChild(s);
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                window.gtag = gtag;
+                gtag('js', new Date());
+                gtag('config', GA_ID);
+            }
+
+            function dismissBanner() {
+                var el = document.getElementById('consent');
+                el.classList.add('hiding');
+                el.addEventListener('transitionend', function() {
+                    el.remove();
+                }, { once: true });
+            }
+
+            // Already made a choice
+            if (consent === 'yes') {
+                loadGA();
+                var el = document.getElementById('consent');
+                if (el) el.remove();
+                return;
+            }
+            if (consent === 'no') {
+                var el = document.getElementById('consent');
+                if (el) el.remove();
+                return;
+            }
+
+            // Show banner after a short delay
+            setTimeout(function() {
+                var el = document.getElementById('consent');
+                if (el) el.classList.add('visible');
+            }, 1500);
+
+            document.getElementById('consentAccept').addEventListener('click', function() {
+                localStorage.setItem(CONSENT_KEY, 'yes');
+                loadGA();
+                dismissBanner();
+            });
+
+            document.getElementById('consentDecline').addEventListener('click', function() {
+                localStorage.setItem(CONSENT_KEY, 'no');
+                dismissBanner();
+            });
+        })();
     </script>
 
 </body>

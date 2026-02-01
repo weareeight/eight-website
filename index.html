@@ -724,6 +724,80 @@
                 padding: 32px 24px;
             }
         }
+
+        /* ── Footer ── */
+        footer {
+            padding: 48px 0;
+            border-top: 1px solid var(--fg-subtle);
+            margin-top: 100px;
+        }
+
+        .footer-inner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer-brand {
+            font-family: var(--font-display);
+            font-size: 14px;
+            font-weight: 400;
+            color: var(--fg-muted);
+            letter-spacing: -0.01em;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 28px;
+        }
+
+        .footer-links a {
+            font-size: 13px;
+            color: var(--fg-muted);
+            transition: color 0.3s var(--ease-out);
+        }
+
+        .footer-links a:hover {
+            color: var(--fg);
+        }
+
+        @media (max-width: 520px) {
+            .footer-inner {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
+        }
+
+        /* ── Reduced Motion ── */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+            html { scroll-behavior: auto; }
+            .reveal {
+                opacity: 1;
+                transform: none;
+            }
+            .hero-title {
+                opacity: 1;
+                -webkit-text-fill-color: var(--fg);
+                background: none;
+            }
+            .hero-tagline {
+                opacity: 1;
+            }
+            .hero-scroll-line {
+                height: 60px;
+            }
+            #nav {
+                opacity: 1;
+                transform: none;
+                pointer-events: auto;
+            }
+        }
     </style>
 </head>
 <body>
@@ -759,7 +833,19 @@
     </main>
 
     <!-- Footer -->
-    <footer id="footer"></footer>
+    <footer>
+        <div class="container">
+            <div class="footer-inner">
+                <span class="footer-brand">Eight — Digital Products</span>
+                <div class="footer-links">
+                    <a href="https://x.com" target="_blank" rel="noopener">X</a>
+                    <a href="mailto:hello@weareeight.com">Contact</a>
+                    <a href="#/">Terms</a>
+                    <a href="#/">Privacy</a>
+                </div>
+            </div>
+        </div>
+    </footer>
 
     <script>
         // ── Scroll-aware nav ──

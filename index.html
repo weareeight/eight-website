@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Eight — Digital Products</title>
     <meta name="description" content="Eight builds digital products — SaaS tools and Shopify themes crafted with precision.">
+    <meta name="theme-color" content="#08080A">
 
     <!-- Google Fonts: TASA Orbiter (variable, 400-800) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -228,7 +229,7 @@
 
         /* ── Products Section ── */
         .products {
-            padding: 80px 0;
+            padding: 120px 0 80px;
         }
 
         .products-header {
@@ -568,16 +569,18 @@
             min-height: auto;
             padding: 48px 40px;
             cursor: default;
+            scroll-margin-top: 80px;
             transition: opacity 0.4s var(--ease-out), transform 0.4s var(--ease-out);
         }
 
-        /* Hide the short desc and arrow in expanded state */
+        /* Hide the short desc and arrow in expanded state, show close button */
         .product-card.expanded .product-card-desc { display: none; }
         .product-card.expanded .product-card-arrow { display: none; }
+        .product-card.expanded .product-close-btn { display: flex; }
 
         /* Scale up the product name */
         .product-card.expanded .product-card-name {
-            font-size: clamp(36px, 5vw, 64px);
+            font-size: clamp(36px, 5vw, 72px);
             margin-bottom: 8px;
         }
 
@@ -658,9 +661,16 @@
             transition: background 0.3s var(--ease-out), color 0.3s var(--ease-out);
         }
 
-        .product-visit-btn:hover {
+        .product-visit-btn:hover:not(:disabled) {
             background: var(--card-accent);
             color: var(--bg);
+        }
+
+        .product-visit-btn:disabled {
+            opacity: 0.4;
+            cursor: default;
+            border-color: var(--fg-subtle);
+            color: var(--fg-muted);
         }
 
         .product-visit-btn svg {
@@ -671,11 +681,12 @@
             fill: none;
         }
 
-        /* Close button */
+        /* Close button — positioned relative to the card */
         .product-close-btn {
+            display: none;
             position: absolute;
-            top: 0;
-            right: 0;
+            top: 16px;
+            right: 16px;
             width: 44px;
             height: 44px;
             display: flex;
@@ -738,7 +749,7 @@
         footer {
             padding: 48px 0;
             border-top: 1px solid var(--fg-subtle);
-            margin-top: 100px;
+            margin-top: 120px;
         }
 
         .footer-inner {
@@ -801,7 +812,7 @@
             .hero-scroll-line {
                 height: 60px;
             }
-            #nav {
+            #nav.visible {
                 opacity: 1;
                 transform: none;
                 pointer-events: auto;
@@ -990,7 +1001,7 @@
             card.innerHTML = `
                 <div class="product-visual visual-${product.visual}"></div>
                 <div class="product-card-arrow">
-                    <svg viewBox="0 0 24 24"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg>
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg>
                 </div>
                 <span class="product-card-tag">${product.tag}</span>
                 <h2 class="product-card-name">${product.name}</h2>
@@ -1011,6 +1022,7 @@
         // ── Product Expand/Collapse ──
         let activeProduct = null;
         let previousFocus = null;
+        let closeTimeout = null;
 
         function openProduct(slug) {
             const product = products.find(p => p.slug === slug);
@@ -1029,16 +1041,29 @@
             document.body.classList.add('product-open');
             document.body.style.setProperty('--active-accent', product.accent);
 
-            // Remove any existing expanded content from any card
+            // Clear any pending close timeout and remove existing expanded content
+            if (closeTimeout) { clearTimeout(closeTimeout); closeTimeout = null; }
             productsGrid.querySelectorAll('.product-expanded-content').forEach(el => el.remove());
+            productsGrid.querySelectorAll('.product-card.expanded').forEach(c => c.classList.remove('expanded'));
 
             // Create expanded content
             const content = document.createElement('div');
             content.className = 'product-expanded-content';
+            // Add close button directly to card (not inside expanded content)
+            let closeBtn = card.querySelector('.product-close-btn');
+            if (!closeBtn) {
+                closeBtn = document.createElement('button');
+                closeBtn.className = 'product-close-btn';
+                closeBtn.setAttribute('aria-label', `Close ${product.name}`);
+                closeBtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+                card.appendChild(closeBtn);
+            }
+            closeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                closeProduct();
+            });
+
             content.innerHTML = `
-                <button class="product-close-btn" aria-label="Close ${product.name}">
-                    <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
-                </button>
                 <p class="product-expanded-desc">${product.longDesc}</p>
                 <div class="product-expanded-features">
                     ${product.features.map(f => `
@@ -1049,10 +1074,10 @@
                     `).join('')}
                 </div>
                 <div class="product-expanded-actions">
-                    <a href="#" class="product-visit-btn" target="_blank" rel="noopener">
-                        Visit ${product.name}
-                        <svg viewBox="0 0 24 24"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg>
-                    </a>
+                    <button class="product-visit-btn" onclick="event.stopPropagation()" disabled>
+                        Coming Soon
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg>
+                    </button>
                 </div>
             `;
             card.appendChild(content);
@@ -1067,11 +1092,6 @@
             });
 
             // Focus close button
-            const closeBtn = content.querySelector('.product-close-btn');
-            closeBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                closeProduct();
-            });
             setTimeout(() => closeBtn.focus(), 100);
         }
 
@@ -1086,7 +1106,7 @@
                 const content = card.querySelector('.product-expanded-content');
                 if (content) {
                     // Wait for transition to finish before removing content
-                    setTimeout(() => content.remove(), 400);
+                    closeTimeout = setTimeout(() => { content.remove(); closeTimeout = null; }, 400);
                 }
             }
 
@@ -1126,6 +1146,7 @@
         }
 
         window.addEventListener('popstate', handleHash);
+        window.addEventListener('hashchange', handleHash);
 
         // Check hash on initial load
         handleHash();

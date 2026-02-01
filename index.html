@@ -542,6 +542,188 @@
             opacity: 1;
             transform: translateY(0);
         }
+
+        /* ── Product Expand State ── */
+        .products-grid.has-expanded .product-card {
+            opacity: 0;
+            transform: scale(0.96);
+            pointer-events: none;
+            transition: opacity 0.35s var(--ease-out), transform 0.35s var(--ease-out);
+        }
+
+        .products-grid.has-expanded .product-card.expanded {
+            opacity: 1;
+            transform: scale(1);
+            pointer-events: auto;
+            grid-column: 1 / -1 !important;
+            min-height: auto;
+            padding: 48px 40px;
+            cursor: default;
+            transition: opacity 0.4s var(--ease-out), transform 0.4s var(--ease-out);
+        }
+
+        /* Hide the short desc and arrow in expanded state */
+        .product-card.expanded .product-card-desc { display: none; }
+        .product-card.expanded .product-card-arrow { display: none; }
+
+        /* Scale up the product name */
+        .product-card.expanded .product-card-name {
+            font-size: clamp(36px, 5vw, 64px);
+            margin-bottom: 8px;
+        }
+
+        /* Push visual motif to be more ambient in expanded state */
+        .product-card.expanded .product-visual {
+            width: 40%;
+            height: 100%;
+            opacity: 0.05;
+        }
+
+        /* ── Expanded Content ── */
+        .product-expanded-content {
+            position: relative;
+            z-index: 2;
+            margin-top: 32px;
+        }
+
+        .product-expanded-desc {
+            font-size: 17px;
+            color: var(--fg-muted);
+            line-height: 1.7;
+            max-width: 600px;
+            margin-bottom: 48px;
+            opacity: 0;
+            animation: fadeUp 0.5s var(--ease-out) 0.1s forwards;
+        }
+
+        .product-expanded-features {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 36px;
+            padding-top: 36px;
+            border-top: 1px solid var(--fg-subtle);
+        }
+
+        .feature-item {
+            opacity: 0;
+            animation: fadeUp 0.4s var(--ease-out) forwards;
+        }
+
+        .feature-item:nth-child(1) { animation-delay: 0.15s; }
+        .feature-item:nth-child(2) { animation-delay: 0.2s; }
+        .feature-item:nth-child(3) { animation-delay: 0.25s; }
+
+        .feature-item h3 {
+            font-family: var(--font-display);
+            font-size: 15px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            letter-spacing: -0.01em;
+        }
+
+        .feature-item p {
+            font-size: 14px;
+            color: var(--fg-muted);
+            line-height: 1.6;
+        }
+
+        .product-expanded-actions {
+            margin-top: 48px;
+            opacity: 0;
+            animation: fadeUp 0.4s var(--ease-out) 0.3s forwards;
+        }
+
+        .product-visit-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 32px;
+            border: 1px solid var(--card-accent);
+            color: var(--card-accent);
+            font-family: var(--font-body);
+            font-size: 14px;
+            font-weight: 500;
+            letter-spacing: 0.02em;
+            background: transparent;
+            cursor: pointer;
+            transition: background 0.3s var(--ease-out), color 0.3s var(--ease-out);
+        }
+
+        .product-visit-btn:hover {
+            background: var(--card-accent);
+            color: var(--bg);
+        }
+
+        .product-visit-btn svg {
+            width: 14px;
+            height: 14px;
+            stroke: currentColor;
+            stroke-width: 1.5;
+            fill: none;
+        }
+
+        /* Close button */
+        .product-close-btn {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            background: none;
+            border: none;
+            color: var(--fg-muted);
+            transition: color 0.3s var(--ease-out);
+            opacity: 0;
+            animation: fadeIn 0.3s var(--ease-out) 0.1s forwards;
+            z-index: 10;
+        }
+
+        .product-close-btn:hover { color: var(--fg); }
+
+        .product-close-btn svg {
+            width: 20px;
+            height: 20px;
+            stroke: currentColor;
+            stroke-width: 1.5;
+            fill: none;
+        }
+
+        /* ── Color Bleed on Body ── */
+        @keyframes colorBleedIn {
+            from { opacity: 0; }
+            to { opacity: 0.06; }
+        }
+
+        body.product-open::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: -1;
+            background: radial-gradient(
+                ellipse at 50% 20%,
+                var(--active-accent) 0%,
+                transparent 65%
+            );
+            opacity: 0;
+            animation: colorBleedIn 0.7s var(--ease-in-out) forwards;
+        }
+
+        /* Responsive: stack features on mobile */
+        @media (max-width: 768px) {
+            .product-expanded-features {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+
+            .products-grid.has-expanded .product-card.expanded {
+                padding: 32px 24px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -731,10 +913,127 @@
             productsGrid.appendChild(card);
         });
 
-        // Placeholder for openProduct (implemented in Task 4)
+        // ── Product Expand/Collapse ──
+        let activeProduct = null;
+        let previousFocus = null;
+
         function openProduct(slug) {
-            console.log('Open product:', slug);
+            const product = products.find(p => p.slug === slug);
+            if (!product || activeProduct === slug) return;
+
+            previousFocus = document.activeElement;
+            activeProduct = slug;
+
+            const card = productsGrid.querySelector(`[data-slug="${slug}"]`);
+            if (!card) return;
+
+            // Update URL
+            history.pushState(null, '', `#${slug}`);
+
+            // Color bleed on body
+            document.body.classList.add('product-open');
+            document.body.style.setProperty('--active-accent', product.accent);
+
+            // Remove any existing expanded content from any card
+            productsGrid.querySelectorAll('.product-expanded-content').forEach(el => el.remove());
+
+            // Create expanded content
+            const content = document.createElement('div');
+            content.className = 'product-expanded-content';
+            content.innerHTML = `
+                <button class="product-close-btn" aria-label="Close ${product.name}">
+                    <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                </button>
+                <p class="product-expanded-desc">${product.longDesc}</p>
+                <div class="product-expanded-features">
+                    ${product.features.map(f => `
+                        <div class="feature-item">
+                            <h3>${f.title}</h3>
+                            <p>${f.desc}</p>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="product-expanded-actions">
+                    <a href="#" class="product-visit-btn" target="_blank" rel="noopener">
+                        Visit ${product.name}
+                        <svg viewBox="0 0 24 24"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg>
+                    </a>
+                </div>
+            `;
+            card.appendChild(content);
+
+            // Set expanded state
+            productsGrid.classList.add('has-expanded');
+            card.classList.add('expanded');
+
+            // Scroll to card
+            requestAnimationFrame(() => {
+                card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+
+            // Focus close button
+            const closeBtn = content.querySelector('.product-close-btn');
+            closeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                closeProduct();
+            });
+            setTimeout(() => closeBtn.focus(), 100);
         }
+
+        function closeProduct() {
+            if (!activeProduct) return;
+
+            const card = productsGrid.querySelector('.product-card.expanded');
+
+            // Remove expanded state
+            if (card) {
+                card.classList.remove('expanded');
+                const content = card.querySelector('.product-expanded-content');
+                if (content) {
+                    // Wait for transition to finish before removing content
+                    setTimeout(() => content.remove(), 400);
+                }
+            }
+
+            productsGrid.classList.remove('has-expanded');
+            document.body.classList.remove('product-open');
+            activeProduct = null;
+
+            // Update URL
+            history.pushState(null, '', '#/');
+
+            // Return focus
+            if (previousFocus) {
+                requestAnimationFrame(() => previousFocus.focus());
+                previousFocus = null;
+            }
+        }
+
+        // Keyboard: Escape to close
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && activeProduct) {
+                closeProduct();
+            }
+        });
+
+        // Handle hash on page load and back/forward
+        function handleHash() {
+            const hash = window.location.hash.slice(1);
+            if (hash && hash !== '/' && hash !== 'products') {
+                const product = products.find(p => p.slug === hash);
+                if (product && activeProduct !== hash) {
+                    // Small delay to ensure DOM is ready
+                    requestAnimationFrame(() => openProduct(hash));
+                }
+            } else if (activeProduct) {
+                closeProduct();
+            }
+        }
+
+        window.addEventListener('popstate', handleHash);
+
+        // Check hash on initial load
+        handleHash();
 
         // ── Scroll Reveal (IntersectionObserver) ──
         function observeReveals() {

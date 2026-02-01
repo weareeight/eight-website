@@ -225,6 +225,323 @@
             height: 0;
             animation: scrollLine 1.2s var(--ease-out) 1.5s forwards;
         }
+
+        /* ── Products Section ── */
+        .products {
+            padding: 80px 0;
+        }
+
+        .products-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 48px;
+        }
+
+        .products-label {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--fg-muted);
+        }
+
+        .products-count {
+            font-size: 13px;
+            color: var(--fg-subtle);
+            letter-spacing: 0.05em;
+        }
+
+        /* ── Asymmetric Editorial Grid ── */
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 3px;
+        }
+
+        /* Row 1: Large left (7 cols) + smaller right (5 cols) */
+        .product-card:nth-child(1) { grid-column: span 7; }
+        .product-card:nth-child(2) { grid-column: span 5; }
+
+        /* Row 2: Three roughly equal columns (4+4+4) */
+        .product-card:nth-child(3) { grid-column: span 4; }
+        .product-card:nth-child(4) { grid-column: span 4; }
+        .product-card:nth-child(5) { grid-column: span 4; }
+
+        /* Row 3: Inverted — smaller left (5 cols) + large right (7 cols) */
+        .product-card:nth-child(6) { grid-column: span 5; }
+        .product-card:nth-child(7) { grid-column: span 7; }
+
+        /* Row 4: Full-width finale */
+        .product-card:nth-child(8) { grid-column: 1 / -1; }
+
+        @media (max-width: 768px) {
+            .products-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .product-card:nth-child(n) { grid-column: span 1; }
+            .product-card:nth-child(8) { grid-column: span 2; }
+        }
+
+        @media (max-width: 520px) {
+            .products-grid {
+                grid-template-columns: 1fr;
+            }
+            .product-card:nth-child(n) { grid-column: span 1; }
+        }
+
+        /* ── Product Card ── */
+        .product-card {
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            min-height: 360px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 32px;
+            background: #0f0f11;
+            transition: transform 0.5s var(--ease-out), box-shadow 0.5s var(--ease-out);
+            outline: none;
+        }
+
+        /* Accent color wash — radial gradient from top-left corner */
+        .product-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(
+                ellipse at 25% 15%,
+                color-mix(in srgb, var(--card-accent) 10%, transparent) 0%,
+                transparent 65%
+            );
+            opacity: 0.7;
+            transition: opacity 0.5s var(--ease-out);
+        }
+
+        .product-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 24px 48px -12px rgba(0,0,0,0.6);
+        }
+
+        .product-card:hover::before {
+            opacity: 1;
+        }
+
+        .product-card:focus-visible {
+            outline: 2px solid var(--card-accent);
+            outline-offset: -2px;
+        }
+
+        .product-card-tag {
+            font-size: 11px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--card-accent);
+            margin-bottom: 12px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .product-card-name {
+            font-family: var(--font-display);
+            font-size: clamp(22px, 2.5vw, 38px);
+            font-weight: 600;
+            letter-spacing: -0.025em;
+            line-height: 1.1;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .product-card-desc {
+            font-size: 14px;
+            font-weight: 400;
+            color: var(--fg-muted);
+            line-height: 1.55;
+            max-width: 380px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Arrow in top-right */
+        .product-card-arrow {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transform: translate(-6px, 6px);
+            transition: opacity 0.3s var(--ease-out), transform 0.3s var(--ease-out);
+            z-index: 1;
+        }
+
+        .product-card:hover .product-card-arrow {
+            opacity: 0.5;
+            transform: translate(0, 0);
+        }
+
+        .product-card-arrow svg {
+            width: 16px;
+            height: 16px;
+            stroke: var(--fg);
+            stroke-width: 1.5;
+            fill: none;
+        }
+
+        /* ── Abstract Visual Motifs ── */
+        .product-visual {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 55%;
+            height: 65%;
+            opacity: 0.07;
+            transition: opacity 0.6s var(--ease-out), transform 0.8s var(--ease-out);
+            pointer-events: none;
+        }
+
+        .product-card:hover .product-visual {
+            opacity: 0.12;
+            transform: scale(1.04) rotate(1deg);
+        }
+
+        /* Signal — flowing horizontal waveform lines */
+        .visual-signal {
+            background: repeating-linear-gradient(
+                0deg,
+                transparent 0px,
+                transparent 16px,
+                var(--card-accent) 16px,
+                var(--card-accent) 17px
+            );
+            mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 120'%3E%3Cpath d='M0,60 Q30,20 60,60 T120,60 T180,60 T240,60' fill='none' stroke='white' stroke-width='50'/%3E%3C/svg%3E");
+            -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 120'%3E%3Cpath d='M0,60 Q30,20 60,60 T120,60 T180,60 T240,60' fill='none' stroke='white' stroke-width='50'/%3E%3C/svg%3E");
+            mask-size: cover;
+            -webkit-mask-size: cover;
+        }
+
+        /* Forge — intersecting diagonal planes */
+        .visual-forge {
+            background:
+                linear-gradient(35deg, transparent 42%, var(--card-accent) 42%, var(--card-accent) 42.5%, transparent 42.5%),
+                linear-gradient(-35deg, transparent 42%, var(--card-accent) 42%, var(--card-accent) 42.5%, transparent 42.5%),
+                linear-gradient(55deg, transparent 38%, var(--card-accent) 38%, var(--card-accent) 38.5%, transparent 38.5%);
+        }
+
+        /* Meridian — grid/graph paper pattern */
+        .visual-meridian {
+            background:
+                linear-gradient(0deg, transparent 96%, var(--card-accent) 96%) 0 0 / 100% 28px,
+                linear-gradient(90deg, transparent 96%, var(--card-accent) 96%) 0 0 / 28px 100%;
+        }
+
+        /* Vault — nested concentric rectangles */
+        .visual-vault {
+            top: 0;
+            right: 0;
+            width: calc(55% - 40px);
+            height: calc(65% - 40px);
+            margin: 20px;
+            border: 1px solid var(--card-accent);
+        }
+
+        .visual-vault::before {
+            content: '';
+            position: absolute;
+            inset: 16px;
+            border: 1px solid var(--card-accent);
+        }
+
+        .visual-vault::after {
+            content: '';
+            position: absolute;
+            inset: 32px;
+            border: 1px solid var(--card-accent);
+        }
+
+        /* Prism — overlapping translucent triangular shapes */
+        .visual-prism {
+            background:
+                linear-gradient(65deg, transparent 50%, color-mix(in srgb, var(--card-accent) 25%, transparent) 50%),
+                linear-gradient(130deg, transparent 45%, color-mix(in srgb, var(--card-accent) 15%, transparent) 45%),
+                linear-gradient(-10deg, transparent 65%, color-mix(in srgb, var(--card-accent) 20%, transparent) 65%);
+        }
+
+        /* Relay — dot matrix (connected nodes) */
+        .visual-relay {
+            background-image: radial-gradient(circle 2px at center, var(--card-accent) 100%, transparent 100%);
+            background-size: 28px 28px;
+            background-position: 14px 14px;
+        }
+
+        /* Atlas — topographic contour rings */
+        .visual-atlas {
+            width: 45%;
+            height: 75%;
+            top: 5%;
+            right: 5%;
+            border-radius: 50%;
+            border: 1px solid var(--card-accent);
+        }
+
+        .visual-atlas::before {
+            content: '';
+            position: absolute;
+            inset: 22px;
+            border-radius: 50%;
+            border: 1px solid var(--card-accent);
+        }
+
+        .visual-atlas::after {
+            content: '';
+            position: absolute;
+            inset: 48px;
+            border-radius: 50%;
+            border: 1px solid var(--card-accent);
+        }
+
+        /* Orbit — concentric circles radiating out */
+        .visual-orbit {
+            width: 50%;
+            height: 70%;
+            top: 5%;
+            right: 5%;
+            border-radius: 50%;
+            border: 1px solid var(--card-accent);
+        }
+
+        .visual-orbit::before {
+            content: '';
+            position: absolute;
+            inset: -28px;
+            border-radius: 50%;
+            border: 1px solid var(--card-accent);
+        }
+
+        .visual-orbit::after {
+            content: '';
+            position: absolute;
+            inset: -56px;
+            border-radius: 50%;
+            border: 1px solid var(--card-accent);
+        }
+
+        /* ── Scroll Reveal ── */
+        .reveal {
+            opacity: 0;
+            transform: translateY(24px);
+            transition: opacity 0.7s var(--ease-out), transform 0.7s var(--ease-out);
+        }
+
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
     </style>
 </head>
 <body>
@@ -246,7 +563,17 @@
             <p class="hero-tagline">We make digital products.</p>
             <div class="hero-scroll-line"></div>
         </section>
-        <section class="products" id="products"></section>
+        <section class="products" id="products">
+            <div class="container">
+                <div class="products-header reveal">
+                    <span class="products-label">Products</span>
+                    <span class="products-count">01—08</span>
+                </div>
+                <div class="products-grid" id="productsGrid">
+                    <!-- Cards injected by JS -->
+                </div>
+            </div>
+        </section>
     </main>
 
     <!-- Footer -->
@@ -278,6 +605,154 @@
                 nav.classList.remove('scrolled');
             }
         }, { passive: true });
+
+        // ── Product Data ──
+        const products = [
+            {
+                slug: 'signal', name: 'Signal', tag: 'Analytics',
+                desc: 'Real-time analytics that surface what matters.',
+                longDesc: 'Signal cuts through noise to give teams the metrics they actually need. Real-time dashboards, smart anomaly detection, and data pipelines that connect any source.',
+                accent: '#E8A849', visual: 'signal',
+                features: [
+                    { title: 'Live Dashboards', desc: 'Custom dashboards that update in real-time with the metrics your team cares about.' },
+                    { title: 'Smart Alerts', desc: 'Anomaly detection that learns your patterns and alerts only when it matters.' },
+                    { title: 'Data Pipelines', desc: 'Connect any source. Transform, aggregate, and route data without writing ETL code.' }
+                ]
+            },
+            {
+                slug: 'forge', name: 'Forge', tag: 'Developer Tools',
+                desc: 'A development environment built for speed.',
+                longDesc: 'Forge handles the infrastructure so your team can focus on shipping product. Instant environments, built-in CI/CD, and real-time collaboration.',
+                accent: '#5B8DEF', visual: 'forge',
+                features: [
+                    { title: 'Instant Environments', desc: 'Spin up full-stack dev environments in seconds, not hours.' },
+                    { title: 'Built-in CI/CD', desc: 'Push to deploy with zero configuration. Preview environments for every branch.' },
+                    { title: 'Team Sync', desc: 'Real-time collaboration with shared terminals and live code review.' }
+                ]
+            },
+            {
+                slug: 'meridian', name: 'Meridian', tag: 'Project Management',
+                desc: 'Project management stripped to its core.',
+                longDesc: 'Meridian gives teams structure without ceremony, so work flows naturally. Adaptive boards, timeline views, and automations that reduce busywork.',
+                accent: '#6BAF8D', visual: 'meridian',
+                features: [
+                    { title: 'Adaptive Boards', desc: 'Workflows that reshape themselves based on how your team actually works.' },
+                    { title: 'Timeline View', desc: 'See the big picture without losing the details. Drag, adjust, ship.' },
+                    { title: 'Automations', desc: 'Reduce busywork with rules that trigger on status, assignee, or custom fields.' }
+                ]
+            },
+            {
+                slug: 'vault', name: 'Vault', tag: 'Security',
+                desc: 'Enterprise-grade secrets management.',
+                longDesc: 'Vault makes security the path of least resistance. Zero-knowledge encryption, automatic credential rotation, and drop-in SDKs for any stack.',
+                accent: '#7B6FD4', visual: 'vault',
+                features: [
+                    { title: 'Zero-Knowledge', desc: 'Your secrets are encrypted end-to-end. We never see them. Nobody does.' },
+                    { title: 'Rotation Engine', desc: 'Automatic credential rotation with zero downtime and full audit trails.' },
+                    { title: 'SDK & CLI', desc: 'Drop-in integration for any stack. One line to fetch a secret, anywhere.' }
+                ]
+            },
+            {
+                slug: 'prism', name: 'Prism', tag: 'Design Systems',
+                desc: 'Build and maintain design systems at scale.',
+                longDesc: 'Prism bridges the gap between design intent and production code. Token management, component libraries, and two-way Figma sync.',
+                accent: '#D4708F', visual: 'prism',
+                features: [
+                    { title: 'Token Management', desc: 'Define once, use everywhere. Colours, spacing, and type scales that stay in sync.' },
+                    { title: 'Component Library', desc: 'Production-ready components with built-in accessibility and documentation.' },
+                    { title: 'Figma Sync', desc: 'Two-way sync between Figma and code. Change a token, update everywhere.' }
+                ]
+            },
+            {
+                slug: 'relay', name: 'Relay', tag: 'Communications',
+                desc: 'Unified messaging infrastructure.',
+                longDesc: 'Relay handles email, push, SMS, and in-app notifications through a single API. Omnichannel routing, dynamic templates, and real-time delivery intelligence.',
+                accent: '#4DBDB9', visual: 'relay',
+                features: [
+                    { title: 'Omnichannel', desc: 'One API to reach users on any channel. Smart routing picks the right one.' },
+                    { title: 'Template Engine', desc: 'Dynamic templates with logic, loops, and personalisation. No code required.' },
+                    { title: 'Delivery Intel', desc: 'Know exactly what was delivered, opened, and clicked. In real-time.' }
+                ]
+            },
+            {
+                slug: 'atlas', name: 'Atlas', tag: 'Data Platform',
+                desc: 'A unified data layer for complex data.',
+                longDesc: 'Atlas connects, transforms, and serves data across your entire organisation. Universal connectors, SQL-based transforms, and a shared semantic layer.',
+                accent: '#B8A99A', visual: 'atlas',
+                features: [
+                    { title: 'Universal Connectors', desc: 'Pull from databases, APIs, warehouses, and spreadsheets. All normalised.' },
+                    { title: 'Transformation Layer', desc: 'SQL-based transforms with version control and automated testing.' },
+                    { title: 'Semantic Layer', desc: 'Define metrics once. Every team queries the same source of truth.' }
+                ]
+            },
+            {
+                slug: 'orbit', name: 'Orbit', tag: 'Infrastructure',
+                desc: 'Cloud infrastructure that manages itself.',
+                longDesc: 'Orbit handles provisioning, scaling, and monitoring so your team ships features instead of fighting fires. Auto-scaling, observability, and global edge deployment.',
+                accent: '#9B8EC4', visual: 'orbit',
+                features: [
+                    { title: 'Auto-Scaling', desc: 'Traffic spikes handled automatically. Pay only for what you use.' },
+                    { title: 'Observability', desc: 'Logs, metrics, and traces in one place. Find issues before users do.' },
+                    { title: 'Global Edge', desc: 'Deploy to 50+ regions. Your app, fast everywhere, configured in one file.' }
+                ]
+            }
+        ];
+
+        // ── Render Product Cards ──
+        const productsGrid = document.getElementById('productsGrid');
+
+        products.forEach((product) => {
+            const card = document.createElement('div');
+            card.className = 'product-card reveal';
+            card.style.setProperty('--card-accent', product.accent);
+            card.setAttribute('role', 'button');
+            card.setAttribute('tabindex', '0');
+            card.setAttribute('aria-label', `View ${product.name} — ${product.tag}`);
+            card.dataset.slug = product.slug;
+
+            card.innerHTML = `
+                <div class="product-visual visual-${product.visual}"></div>
+                <div class="product-card-arrow">
+                    <svg viewBox="0 0 24 24"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg>
+                </div>
+                <span class="product-card-tag">${product.tag}</span>
+                <h2 class="product-card-name">${product.name}</h2>
+                <p class="product-card-desc">${product.desc}</p>
+            `;
+
+            card.addEventListener('click', () => openProduct(product.slug));
+            card.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    openProduct(product.slug);
+                }
+            });
+
+            productsGrid.appendChild(card);
+        });
+
+        // Placeholder for openProduct (implemented in Task 4)
+        function openProduct(slug) {
+            console.log('Open product:', slug);
+        }
+
+        // ── Scroll Reveal (IntersectionObserver) ──
+        function observeReveals() {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.08, rootMargin: '0px 0px -30px 0px' });
+
+            document.querySelectorAll('.reveal:not(.visible)').forEach((el) => {
+                observer.observe(el);
+            });
+        }
+
+        observeReveals();
     </script>
 
 </body>

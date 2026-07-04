@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eight — Software Engineering</title>
+    <meta name="description" content="Eight. Software engineering since 2012.">
+    <meta name="theme-color" content="#08080A">
+
+    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+
+    <!-- Google Fonts: TASA Orbiter (variable, 400-800) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=TASA+Orbiter:wght@400..800&display=swap">
+    <link href="https://fonts.googleapis.com/css2?family=TASA+Orbiter:wght@400..800&display=swap" rel="stylesheet">
+
+    <style>
+        /* ── CSS Reset ── */
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* ── Custom Properties ── */
+        :root {
+            /* Base palette */
+            --bg: #08080A;
+            --fg: #EAEAEA;
+            --fg-muted: #787878;
+            --fg-subtle: #3a3a3a;
+
+            /* Font stacks */
+            --font-display: 'TASA Orbiter', sans-serif;
+            --font-body: 'TASA Orbiter', sans-serif;
+
+            /* Easing curves */
+            --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+            --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+        }
+
+        /* ── HTML ── */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* ── Body ── */
+        body {
+            font-family: var(--font-body);
+            background-color: var(--bg);
+            color: var(--fg);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            overflow-x: hidden;
+            line-height: 1.5;
+        }
+
+        /* ── Scrollbar ── */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--fg-subtle); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--fg-muted); }
+
+        /* ── Selection ── */
+        ::selection {
+            background: var(--fg);
+            color: var(--bg);
+        }
+
+        /* ── Link Reset ── */
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        /* ── Container ── */
+        .container {
+            max-width: 1320px;
+            margin: 0 auto;
+            padding: 0 40px;
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 0 20px; }
+        }
+
+        /* ── Keyframes ── */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes scrollLine {
+            from { height: 0; }
+            to { height: 60px; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* ── Hero ── */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .hero-title {
+            font-size: 0;
+            line-height: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ── Hero Logo (Dot Grid) ── */
+        .hero-logo {
+            width: clamp(52px, 9vw, 120px);
+            height: auto;
+            display: block;
+        }
+
+        .hero-logo .dot {
+            fill: var(--fg);
+            opacity: 0;
+            transform-origin: center;
+            transform-box: fill-box;
+        }
+
+        /* Constellation Snap: each dot flies in from a unique scattered position */
+        .hero-logo #dot-1 { animation: dotSnap1 0.7s var(--ease-out) 0.3s forwards, dotBreathe 6s var(--ease-in-out) 2.5s infinite; }
+        .hero-logo #dot-2 { animation: dotSnap2 0.7s var(--ease-out) 0.38s forwards, dotBreathe 6s var(--ease-in-out) 3.0s infinite; }
+        .hero-logo #dot-3 { animation: dotSnap3 0.7s var(--ease-out) 0.46s forwards, dotBreathe 6s var(--ease-in-out) 3.5s infinite; }
+        .hero-logo #dot-4 { animation: dotSnap4 0.7s var(--ease-out) 0.54s forwards, dotBreathe 6s var(--ease-in-out) 3.0s infinite; }
+        .hero-logo #dot-5 { animation: dotSnap5 0.7s var(--ease-out) 0.62s forwards, dotBreathe 6s var(--ease-in-out) 3.5s infinite; }
+        .hero-logo #dot-6 { animation: dotSnap6 0.7s var(--ease-out) 0.70s forwards, dotBreathe 6s var(--ease-in-out) 4.0s infinite; }
+        .hero-logo #dot-7 { animation: dotSnap7 0.7s var(--ease-out) 0.78s forwards, dotBreathe 6s var(--ease-in-out) 3.5s infinite; }
+        .hero-logo #dot-8 { animation: dotSnap8 0.7s var(--ease-out) 0.86s forwards, dotBreathe 6s var(--ease-in-out) 4.0s infinite; }
+
+        /* Scatter origins — dots converge from all directions */
+        @keyframes dotSnap1 {
+            from { opacity: 0; transform: translate(-180%, -220%) scale(0.4); }
+            to   { opacity: 1; transform: translate(0, 0) scale(1); }
+        }
+        @keyframes dotSnap2 {
+            from { opacity: 0; transform: translate(40%, -280%) scale(0.4); }
+            to   { opacity: 1; transform: translate(0, 0) scale(1); }
+        }
+        @keyframes dotSnap3 {
+            from { opacity: 0; transform: translate(200%, -160%) scale(0.4); }
+            to   { opacity: 1; transform: translate(0, 0) scale(1); }
+        }
+        @keyframes dotSnap4 {
+            from { opacity: 0; transform: translate(-240%, 60%) scale(0.4); }
+            to   { opacity: 1; transform: translate(0, 0) scale(1); }
+        }
+        @keyframes dotSnap5 {
+            from { opacity: 0; transform: translate(0, 0) scale(0); }
+            to   { opacity: 1; transform: translate(0, 0) scale(1); }
+        }
+        @keyframes dotSnap6 {
+            from { opacity: 0; transform: translate(260%, 40%) scale(0.4); }
+            to   { opacity: 1; transform: translate(0, 0) scale(1); }
+        }
+        @keyframes dotSnap7 {
+            from { opacity: 0; transform: translate(-160%, 240%) scale(0.4); }
+            to   { opacity: 1; transform: translate(0, 0) scale(1); }
+        }
+        @keyframes dotSnap8 {
+            from { opacity: 0; transform: translate(120%, 200%) scale(0.4); }
+            to   { opacity: 1; transform: translate(0, 0) scale(1); }
+        }
+
+        /* Breathing: diagonal luminance wave */
+        @keyframes dotBreathe {
+            0%, 100% { opacity: 1; }
+            50%      { opacity: 0.45; }
+        }
+
+        .hero-tagline {
+            font-family: var(--font-body);
+            font-size: clamp(16px, 2vw, 20px);
+            color: var(--fg-muted);
+            margin-top: 24px;
+            opacity: 0;
+            animation: fadeUp 0.8s var(--ease-out) 1.6s forwards;
+        }
+
+        .hero-scroll-line {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 1px;
+            background: var(--fg-subtle);
+            height: 0;
+            animation: scrollLine 1.2s var(--ease-out) 2.2s forwards;
+        }
+
+        /* ── Stats Ribbon ── */
+        .stats {
+            padding: 0 0 40px;
+            opacity: 0;
+            animation: fadeUp 0.8s var(--ease-out) 2.4s forwards;
+        }
+
+        .stats-inner {
+            display: flex;
+            justify-content: center;
+            gap: 48px;
+            font-size: 14px;
+            color: var(--fg-muted);
+            letter-spacing: 0.05em;
+        }
+
+        .stats-divider {
+            color: var(--fg-subtle);
+            user-select: none;
+        }
+
+        @media (max-width: 520px) {
+            .stats-inner {
+                flex-direction: column;
+                align-items: center;
+                gap: 8px;
+            }
+            .stats-divider { display: none; }
+        }
+
+        /* ── Beliefs Section ── */
+        .beliefs {
+            padding: 80px 0 0;
+        }
+
+        .belief {
+            min-height: 70vh;
+            display: flex;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .belief-text {
+            font-family: var(--font-display);
+            font-size: clamp(28px, 5vw, 64px);
+            font-weight: 600;
+            letter-spacing: -0.03em;
+            line-height: 1.15;
+            max-width: 900px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .belief-text em {
+            font-style: normal;
+            color: var(--fg-muted);
+        }
+
+        /* ── Belief Visual Motifs ── */
+        .belief-visual {
+            position: absolute;
+            right: -5%;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 45%;
+            height: 70%;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 1.2s var(--ease-out);
+        }
+
+        .belief.visible .belief-visual {
+            opacity: 0.05;
+        }
+
+        /* Weave — intersecting fine diagonal lines */
+        .visual-weave {
+            background:
+                repeating-linear-gradient(
+                    45deg,
+                    transparent,
+                    transparent 24px,
+                    var(--fg) 24px,
+                    var(--fg) 25px
+                ),
+                repeating-linear-gradient(
+                    -45deg,
+                    transparent,
+                    transparent 24px,
+                    var(--fg) 24px,
+                    var(--fg) 25px
+                );
+        }
+
+        /* Pulse — concentric expanding circles */
+        .visual-pulse {
+            border-radius: 50%;
+            width: 40%;
+            aspect-ratio: 1;
+            height: auto;
+            right: 5%;
+            border: 1px solid var(--fg);
+        }
+
+        .visual-pulse::before {
+            content: '';
+            position: absolute;
+            inset: 20%;
+            border-radius: 50%;
+            border: 1px solid var(--fg);
+        }
+
+        .visual-pulse::after {
+            content: '';
+            position: absolute;
+            inset: 40%;
+            border-radius: 50%;
+            border: 1px solid var(--fg);
+        }
+
+        /* Lattice — fine dot grid */
+        .visual-lattice {
+            background-image: radial-gradient(circle 1.5px at center, var(--fg) 100%, transparent 100%);
+            background-size: 20px 20px;
+        }
+
+        /* Shift — horizontal gradient bands */
+        .visual-shift {
+            background: repeating-linear-gradient(
+                180deg,
+                var(--fg) 0px,
+                var(--fg) 1px,
+                transparent 1px,
+                transparent 32px
+            );
+            mask-image: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.5) 30%, white 50%, rgba(255,255,255,0.5) 70%, transparent 100%);
+            -webkit-mask-image: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.5) 30%, white 50%, rgba(255,255,255,0.5) 70%, transparent 100%);
+        }
+
+        @media (max-width: 768px) {
+            .belief-visual {
+                display: none;
+            }
+            .belief {
+                min-height: 50vh;
+            }
+        }
+
+        /* ── Scroll Reveal ── */
+        .reveal {
+            opacity: 0;
+            transform: translateY(24px);
+            transition: opacity 0.7s var(--ease-out), transform 0.7s var(--ease-out);
+        }
+
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Staggered reveal for beliefs */
+        .belief.reveal {
+            transition-duration: 0.9s;
+        }
+
+        /* ── Footer ── */
+        footer {
+            padding: 64px 0;
+            border-top: 1px solid var(--fg-subtle);
+            margin-top: 80px;
+        }
+
+        .footer-inner {
+            text-align: left;
+        }
+
+        .footer-quiet {
+            font-size: 12px;
+            color: var(--fg-muted);
+            line-height: 1.7;
+        }
+
+        /* ── Cookie Consent ── */
+        .consent {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 200;
+            max-width: 340px;
+            opacity: 0;
+            transform: translateY(12px);
+            transition: opacity 0.5s var(--ease-out), transform 0.5s var(--ease-out);
+        }
+
+        .consent.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .consent.hiding {
+            opacity: 0;
+            transform: translateY(8px);
+            transition: opacity 0.3s var(--ease-in-out), transform 0.3s var(--ease-in-out);
+        }
+
+        .consent-inner {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            padding: 20px;
+            background: rgba(15, 15, 17, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--fg-subtle);
+        }
+
+        .consent-text {
+            font-size: 13px;
+            color: var(--fg-muted);
+            line-height: 1.5;
+        }
+
+        .consent-text strong {
+            color: var(--fg);
+            font-weight: 500;
+        }
+
+        .consent-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .consent-btn {
+            font-family: var(--font-body);
+            font-size: 12px;
+            font-weight: 500;
+            letter-spacing: 0.02em;
+            padding: 8px 16px;
+            border: 1px solid var(--fg-subtle);
+            background: transparent;
+            color: var(--fg-muted);
+            cursor: pointer;
+            transition: border-color 0.3s var(--ease-out), color 0.3s var(--ease-out), background 0.3s var(--ease-out);
+        }
+
+        .consent-btn:hover {
+            border-color: var(--fg-muted);
+            color: var(--fg);
+        }
+
+        .consent-btn--accept {
+            border-color: var(--fg);
+            color: var(--fg);
+        }
+
+        .consent-btn--accept:hover {
+            background: var(--fg);
+            color: var(--bg);
+        }
+
+        @media (max-width: 480px) {
+            .consent {
+                right: 12px;
+                bottom: 12px;
+                left: 12px;
+                max-width: none;
+            }
+        }
+
+        /* ── Reduced Motion ── */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+            html { scroll-behavior: auto; }
+            .reveal {
+                opacity: 1;
+                transform: none;
+            }
+            .hero-logo .dot {
+                opacity: 1 !important;
+                transform: none !important;
+            }
+            .hero-tagline {
+                opacity: 1;
+            }
+            .hero-scroll-line {
+                height: 60px;
+            }
+            .stats {
+                opacity: 1;
+            }
+            .belief-visual {
+                opacity: 0.05 !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Main Content -->
+    <main>
+        <section class="hero" id="hero">
+            <h1 class="hero-title">
+                <svg class="hero-logo" viewBox="0 0 100 100" aria-label="Eight" role="img" xmlns="http://www.w3.org/2000/svg">
+                    <title>Eight</title>
+                    <circle class="dot dot-r1 dot-c1" id="dot-1" cx="16" cy="16" r="10"/>
+                    <circle class="dot dot-r1 dot-c2" id="dot-2" cx="50" cy="16" r="10"/>
+                    <circle class="dot dot-r1 dot-c3" id="dot-3" cx="84" cy="16" r="10"/>
+                    <circle class="dot dot-r2 dot-c1" id="dot-4" cx="16" cy="50" r="10"/>
+                    <circle class="dot dot-r2 dot-c2" id="dot-5" cx="50" cy="50" r="10"/>
+                    <circle class="dot dot-r2 dot-c3" id="dot-6" cx="84" cy="50" r="10"/>
+                    <circle class="dot dot-r3 dot-c1" id="dot-7" cx="16" cy="84" r="10"/>
+                    <circle class="dot dot-r3 dot-c2" id="dot-8" cx="50" cy="84" r="10"/>
+                </svg>
+            </h1>
+            <p class="hero-tagline">We engineer beautiful software.</p>
+            <div class="hero-scroll-line"></div>
+        </section>
+
+        <section class="stats">
+            <div class="container">
+                <div class="stats-inner">
+                    <span>Est. 2012</span>
+                    <span class="stats-divider" aria-hidden="true">&middot;</span>
+                    <span>11 people</span>
+                    <span class="stats-divider" aria-hidden="true">&middot;</span>
+                    <span>United Kingdom</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="beliefs">
+            <div class="container">
+                <div class="belief reveal">
+                    <div class="belief-visual visual-weave"></div>
+                    <p class="belief-text">Software should be beautiful. <em>Not just functional — beautiful.</em></p>
+                </div>
+                <div class="belief reveal">
+                    <div class="belief-visual visual-pulse"></div>
+                    <p class="belief-text">Small teams. No layers. <em>Every engineer ships.</em></p>
+                </div>
+                <div class="belief reveal">
+                    <div class="belief-visual visual-lattice"></div>
+                    <p class="belief-text">We've been doing this since 2012. <em>We'll be doing it long after the hype fades.</em></p>
+                </div>
+                <div class="belief reveal">
+                    <div class="belief-visual visual-shift"></div>
+                    <p class="belief-text">Craft compounds. <em>Every detail matters because details are all there is.</em></p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-inner">
+                <p class="footer-quiet">&copy; Eight 2026</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // ── Scroll Reveal (IntersectionObserver) ──
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.08, rootMargin: '0px 0px -30px 0px' });
+
+        document.querySelectorAll('.reveal').forEach((el) => {
+            observer.observe(el);
+        });
+    </script>
+
+    <!-- Cookie Consent -->
+    <div class="consent" id="consent" role="dialog" aria-label="Cookie consent" aria-describedby="consentDesc">
+        <div class="consent-inner">
+            <p class="consent-text" id="consentDesc">
+                <strong>Want to be tracked by Google?</strong> That's all we use — Google Analytics. Nothing else.
+            </p>
+            <div class="consent-actions">
+                <button class="consent-btn" id="consentDecline">Rather not</button>
+                <button class="consent-btn consent-btn--accept" id="consentAccept">Sure, go ahead</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ── Cookie Consent & Conditional GA ──
+        (function() {
+            var GA_ID = 'G-QGQHJ9SM6G';
+            var CONSENT_KEY = 'eight-analytics';
+            var consent = localStorage.getItem(CONSENT_KEY);
+
+            function loadGA() {
+                if (document.querySelector('script[src*="googletagmanager"]')) return;
+                var s = document.createElement('script');
+                s.async = true;
+                s.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_ID;
+                document.head.appendChild(s);
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                window.gtag = gtag;
+                gtag('js', new Date());
+                gtag('config', GA_ID);
+            }
+
+            function dismissBanner() {
+                var el = document.getElementById('consent');
+                el.classList.add('hiding');
+                el.addEventListener('transitionend', function() {
+                    el.remove();
+                }, { once: true });
+            }
+
+            // Already made a choice
+            if (consent === 'yes') {
+                loadGA();
+                var el = document.getElementById('consent');
+                if (el) el.remove();
+                return;
+            }
+            if (consent === 'no') {
+                var el = document.getElementById('consent');
+                if (el) el.remove();
+                return;
+            }
+
+            // Show banner after a short delay
+            setTimeout(function() {
+                var el = document.getElementById('consent');
+                if (el) el.classList.add('visible');
+            }, 1500);
+
+            document.getElementById('consentAccept').addEventListener('click', function() {
+                localStorage.setItem(CONSENT_KEY, 'yes');
+                loadGA();
+                dismissBanner();
+            });
+
+            document.getElementById('consentDecline').addEventListener('click', function() {
+                localStorage.setItem(CONSENT_KEY, 'no');
+                dismissBanner();
+            });
+        })();
+    </script>
+
+</body>
+</html>

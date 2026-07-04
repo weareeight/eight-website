@@ -180,7 +180,8 @@
         const MSG_MAIN = 'we make software';
 
         // ── The crash logs (green terminal, after the chaos peak) ──
-        // A different one plays each time. All of them end with 'ok.'
+        // A different one plays each time. Each ends on a reboot command —
+        // no 'ok.': the boot log takes over, then the grid comes back in.
         const LOGS = [
             [
                 { txt: 'panic: unexpected dot at position 8', pre: 0 },
@@ -191,8 +192,7 @@
                 { txt: '$ make it stop', pre: 520 },
                 { txt: "make: *** no rule to make target 'stop'.", pre: 180 },
                 { txt: '', pre: 120 },
-                { txt: '$ reboot', pre: 640 },
-                { txt: 'ok.', pre: 320 }
+                { txt: '$ reboot', pre: 640 }
             ],
             [
                 { txt: 'segmentation fault (core dumped)', pre: 0 },
@@ -202,19 +202,14 @@
                 { txt: '', pre: 120 },
                 { txt: '$ sudo reboot', pre: 520 },
                 { txt: '[sudo] password for visitor:', pre: 200 },
-                { txt: '········', pre: 380 },
-                { txt: '', pre: 120 },
-                { txt: 'ok.', pre: 420 }
+                { txt: '········', pre: 380 }
             ],
             [
                 { txt: 'error: dot 8 is not responding', pre: 0 },
                 { txt: '', pre: 120 },
                 { txt: 'force quit? [Y/n] y', pre: 520 },
                 { txt: 'unsaved changes will be lost. continue? [Y/n] y', pre: 420 },
-                { txt: 'really? [Y/n] Y', pre: 520 },
-                { txt: '', pre: 120 },
-                { txt: 'rebooting…', pre: 420 },
-                { txt: 'ok.', pre: 320 }
+                { txt: 'really? [Y/n] Y', pre: 520 }
             ],
             [
                 { txt: 'kernel panic: dot overflow at position 8', pre: 0 },
@@ -225,22 +220,51 @@
                 { txt: '$ ls', pre: 460 },
                 { txt: 'reboot.sh', pre: 180 },
                 { txt: '', pre: 120 },
-                { txt: '$ ./reboot.sh', pre: 460 },
-                { txt: 'ok.', pre: 320 }
+                { txt: '$ ./reboot.sh', pre: 460 }
             ]
         ];
         const CHAR_MS = 16;
 
+        // ASCII boot banner — resolves out of static when the console comes up
+        const BANNER = [
+            '███████ ██  ██████ ██   ██ ████████',
+            '██      ██ ██      ██   ██    ██',
+            '█████   ██ ██  ███ ███████    ██',
+            '██      ██ ██   ██ ██   ██    ██',
+            '███████ ██  ██████ ██   ██    ██'
+        ];
+
+        // dmesg-style boot log — the reboot actually happening
+        const BOOT = [
+            '[    0.000000] eight/os v8.0.1',
+            '[    0.000001] counting dots… 8/8 ok',
+            '[    0.000002] grid integrity restored',
+            '[    0.000003] lessons learned: 0',
+            '[    0.000004] boot complete'
+        ];
+
         function buildSched(log) {
+            const lines = [];
             let t = 350;
-            const s = log.map(l => {
+            BANNER.forEach((row, i) => lines.push({ txt: row, start: t + i * 80, mode: 'banner' }));
+            t += BANNER.length * 80 + 120;
+            lines.push({ txt: 'eight/os v8.0.1 — /dev/tty8', start: t, mode: 'dump', dim: true });
+            t += 140;
+            lines.push({ txt: '', start: t, mode: 'dump' });
+            t += 160;
+            log.forEach(l => {
                 t += l.pre;
-                const start = t;
+                lines.push({ txt: l.txt, start: t, mode: 'type' });
                 t += l.txt.length * CHAR_MS;
-                return { txt: l.txt, start: start };
             });
-            s.total = t + 900;   // hold on the blinking cursor before reboot
-            return s;
+            t += 450;
+            lines.push({ txt: '', start: t, mode: 'dump' });
+            BOOT.forEach(b => {
+                t += 130;
+                lines.push({ txt: b, start: t, mode: 'dump', dim: true });
+            });
+            lines.total = t + 800;
+            return lines;
         }
 
         let sched = buildSched(LOGS[0]);
@@ -603,51 +627,99 @@
             updateRain(2 + Math.floor(p * 3), dtMs);
         }
 
-        // ── Green terminal (the crash log) ──
+        // ── Green terminal (framed crash console) ──
         function renderTerminal(tt, staticFull) {
             ctx.fillStyle = '#040604';
             ctx.fillRect(0, 0, W, H);
 
-            const f = Math.max(13, FONT_PX);
+            let f = Math.max(13, FONT_PX);
+            if (W < 480) f = 11;
             setFont(f, 500);
             try { ctx.letterSpacing = '0px'; } catch (e) {}
-            const lh = Math.round(f * 1.75);
+            const lh = Math.round(f * 1.6);
+            const pad = Math.round(f * 1.4);
 
             let maxW = 0;
             for (const L of sched) maxW = Math.max(maxW, ctx.measureText(L.txt).width);
-            const x0 = Math.max(24, CX - maxW / 2);
-            const y0 = Math.max(56, CY - (sched.length * lh) / 2);
+
+            const visRows = Math.min(15, Math.max(8, Math.floor((H - 120) / lh)));
+            const fw = Math.min(W - 24, maxW + pad * 2);
+            const fh = visRows * lh + pad * 2;
+            const fx = Math.max(12, CX - fw / 2);
+            const fy = Math.max(36, CY - fh / 2);
+
+            // how hard the console is still fighting to appear
+            const glitchP = staticFull ? 0 : Math.max(0, 1 - tt / 550);
+
+            // frame + title
+            if (staticFull || tt > 120) {
+                const flicker = (glitchP > 0 && Math.random() < glitchP * 0.5) ? 0.15 : 1;
+                ctx.strokeStyle = 'rgba(59, 255, 113, ' + (0.45 * flicker).toFixed(3) + ')';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(fx, fy, fw, fh);
+
+                const title = ' eight — /dev/tty8 ';
+                const tw = ctx.measureText(title).width;
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'middle';
+                ctx.fillStyle = '#040604';
+                ctx.fillRect(fx + 14, fy - f * 0.6, tw, f * 1.2);
+                ctx.fillStyle = GREEN;
+                ctx.globalAlpha = 0.75 * flicker;
+                ctx.fillText(title, fx + 14, fy);
+                ctx.globalAlpha = 1;
+            }
+
+            // content — clipped to the frame, scrolls up like a real console
+            const started = staticFull ? sched.slice() : sched.filter(L => tt >= L.start);
+            const scroll = Math.max(0, started.length - visRows) * lh;
+
+            ctx.save();
+            ctx.beginPath();
+            const clipTop = Math.ceil(f * 0.7);   // keep scrolling content clear of the title chip
+            ctx.rect(fx + 1, fy + clipTop, fw - 2, fh - clipTop - 1);
+            ctx.clip();
 
             ctx.textAlign = 'left';
             ctx.textBaseline = 'middle';
             ctx.shadowColor = GREEN;
-            ctx.shadowBlur = 8;
-            ctx.fillStyle = GREEN;
+            ctx.shadowBlur = 7;
 
-            let cursorX = x0, cursorY = y0, typing = false;
-            sched.forEach((L, i) => {
-                if (!staticFull && tt < L.start) return;
-                const n = staticFull ? L.txt.length
-                    : Math.min(L.txt.length, Math.floor((tt - L.start) / CHAR_MS));
-                const part = L.txt.slice(0, Math.max(0, n));
-                ctx.globalAlpha = L.txt.charAt(0) === '$' ? 1 : 0.88;
-                const y = y0 + i * lh;
-                if (part) ctx.fillText(part, x0, y);
-                cursorX = x0 + ctx.measureText(part).width;
-                cursorY = y;
-                if (!staticFull && n < L.txt.length) typing = true;
+            const x0 = fx + pad;
+            let cursorX = x0, cursorY = fy + pad + lh / 2, cursorOK = false, typing = false;
+
+            started.forEach((L, i) => {
+                const y = fy + pad + i * lh - scroll + lh / 2;
+                let text = L.txt;
+                if (!staticFull && L.mode === 'type') {
+                    const n = Math.floor((tt - L.start) / CHAR_MS);
+                    text = L.txt.slice(0, Math.max(0, Math.min(L.txt.length, n)));
+                    if (n < L.txt.length) typing = true;
+                } else if (!staticFull && L.mode === 'banner' && tt < L.start + 70) {
+                    // the banner resolves out of static
+                    const SH = '█▓▒░';
+                    text = L.txt.split('').map(c => c === ' ' ? ' ' : SH[Math.floor(rand(4))]).join('');
+                }
+                ctx.fillStyle = GREEN;
+                ctx.globalAlpha = L.dim ? 0.55 : (L.txt.charAt(0) === '$' ? 1 : 0.88);
+                if (text) ctx.fillText(text, x0, y);
+                if (L.mode !== 'banner') {
+                    cursorX = x0 + ctx.measureText(text).width;
+                    cursorY = y;
+                    cursorOK = true;
+                }
             });
             ctx.shadowBlur = 0;
             ctx.globalAlpha = 1;
 
-            // green block cursor: solid while typing, blinking while thinking
-            const on = staticFull || typing || (Math.floor(tt / 400) % 2 === 0);
-            if (on) {
+            // block cursor: solid while typing, blinking while thinking
+            if (cursorOK && (staticFull || typing || Math.floor(tt / 400) % 2 === 0)) {
                 ctx.fillStyle = GREEN;
                 ctx.fillRect(cursorX + f * 0.2, cursorY - f * 0.55, f * 0.55, f * 1.1);
             }
+            ctx.restore();
 
-            // CRT dressing: scanlines + vignette + the odd jitter
+            // CRT dressing: scanlines + vignette
             ctx.fillStyle = 'rgba(0, 0, 0, 0.18)';
             for (let y = 0; y < H; y += 3) ctx.fillRect(0, y, W, 1);
 
@@ -657,7 +729,21 @@
             ctx.fillStyle = vg;
             ctx.fillRect(0, 0, W, H);
 
-            if (!staticFull && Math.random() < 0.06) {
+            // glitch-in: green interference while the console claws its way up
+            if (glitchP > 0) {
+                const n = Math.ceil(glitchP * 8);
+                for (let i = 0; i < n; i++) {
+                    const y = rand(H), h = 2 + rand(18);
+                    slice(0, y, W, h, (Math.random() - 0.5) * 90 * glitchP, y);
+                }
+                for (let i = 0; i < n; i++) {
+                    ctx.fillStyle = 'rgba(59, 255, 113, ' + (rand(0.22) * glitchP).toFixed(3) + ')';
+                    ctx.fillRect(0, rand(H), W, 1 + rand(3));
+                }
+                if (Math.random() < glitchP * 0.4) {
+                    slice(0, 0, W, H, 0, (Math.random() - 0.5) * 30 * glitchP);
+                }
+            } else if (!staticFull && Math.random() < 0.06) {
                 const y = rand(H);
                 slice(0, y, W, 2 + rand(6), (Math.random() - 0.5) * 8, y);
             }

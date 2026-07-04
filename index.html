@@ -3,723 +3,1078 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>We Make Software</title>
+    <title>Eight — we make software</title>
+    <meta name="description" content="Eight is a small software studio in Bristol. Est. 2012. We make software.">
+    <meta name="theme-color" content="#08080A">
+
+    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+
+    <!-- TASA Orbiter — display face for the tagline only -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=TASA+Orbiter:wght@400..800&display=swap" rel="stylesheet">
+
     <style>
-        body { margin: 0; overflow: hidden; background-color: #08080A; cursor: pointer; }
-        canvas { display: block; }
-        
-        /* Respect user preference for reduced motion */
-        @media (prefers-reduced-motion: reduce) {
-            body::before {
-                content: "Motion reduced for accessibility";
-                position: fixed;
-                top: 10px;
-                left: 10px;
-                color: #666;
-                font-size: 12px;
-                font-family: monospace;
-                z-index: 1000;
-            }
+        /* ── Reset ── */
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg: #08080A;
+            --fg: #EAEAEA;
+            --fg-muted: #6E6E76;
+            --fg-subtle: #3a3a3a;
+            --mono: ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, Consolas, monospace;
+        }
+
+        html, body { height: 100%; }
+
+        body {
+            background: var(--bg);
+            color: var(--fg);
+            font-family: var(--mono);
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* The visitor's cursor IS the eighth dot — hide the native one
+           on precise pointers only. UI overlays restore it. */
+        @media (pointer: fine) {
+            body { cursor: none; }
+            .consent, .consent * { cursor: auto; }
+            .consent button { cursor: pointer; }
+        }
+
+        #stage {
+            position: fixed;
+            inset: 0;
+            display: block;
+            touch-action: none;
+        }
+
+        #stage:focus { outline: none; }
+        #stage:focus-visible {
+            outline: 1px dashed rgba(234, 234, 234, 0.35);
+            outline-offset: -10px;
+        }
+
+        /* ── Stats line ── */
+        .stats {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 26px;
+            text-align: center;
+            font-size: 11px;
+            letter-spacing: 0.18em;
+            color: var(--fg-muted);
+            opacity: 0;
+            transition: opacity 0.9s ease;
+            pointer-events: none;
+            user-select: none;
+        }
+        .stats.visible { opacity: 1; }
+
+        /* ── No-JS fallback ── */
+        .noscript {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 28px;
+            background: var(--bg);
+        }
+        .noscript svg { width: 64px; height: 64px; }
+        .noscript p { font-size: 14px; letter-spacing: 0.08em; }
+
+        /* ── Cookie consent ── */
+        .consent {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 200;
+            max-width: 340px;
+            opacity: 0;
+            transform: translateY(12px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+        .consent.visible { opacity: 1; transform: translateY(0); }
+        .consent.hiding { opacity: 0; transform: translateY(8px); }
+
+        .consent-inner {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            padding: 20px;
+            background: rgba(15, 15, 17, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--fg-subtle);
+        }
+        .consent-text { font-size: 13px; color: var(--fg-muted); line-height: 1.5; }
+        .consent-text strong { color: var(--fg); font-weight: 500; }
+        .consent-actions { display: flex; gap: 10px; }
+        .consent-btn {
+            font-family: var(--mono);
+            font-size: 12px;
+            padding: 8px 16px;
+            border: 1px solid var(--fg-subtle);
+            background: transparent;
+            color: var(--fg-muted);
+            transition: border-color 0.3s ease, color 0.3s ease, background 0.3s ease;
+        }
+        .consent-btn:hover { border-color: var(--fg-muted); color: var(--fg); }
+        .consent-btn--accept { border-color: var(--fg); color: var(--fg); }
+        .consent-btn--accept:hover { background: var(--fg); color: var(--bg); }
+
+        @media (max-width: 480px) {
+            .consent { right: 12px; bottom: 12px; left: 12px; max-width: none; }
         }
     </style>
 </head>
+
 <body>
-    <canvas id="glitchCanvas"></canvas>
+
+    <canvas id="stage" tabindex="0" role="button"
+        aria-label="The Eight logo with one dot missing. Press Enter to place the eighth dot."></canvas>
+
+    <p class="stats" id="stats">est 2012.&ensp;bristol.</p>
+
+    <noscript>
+        <div class="noscript">
+            <svg viewBox="0 0 100 100" aria-label="Eight" role="img" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="16" cy="16" r="10" fill="#EAEAEA"/><circle cx="50" cy="16" r="10" fill="#EAEAEA"/>
+                <circle cx="84" cy="16" r="10" fill="#EAEAEA"/><circle cx="16" cy="50" r="10" fill="#EAEAEA"/>
+                <circle cx="50" cy="50" r="10" fill="#EAEAEA"/><circle cx="84" cy="50" r="10" fill="#EAEAEA"/>
+                <circle cx="16" cy="84" r="10" fill="#EAEAEA"/><circle cx="50" cy="84" r="10" fill="#EAEAEA"/>
+            </svg>
+            <p>we make software</p>
+        </div>
+    </noscript>
 
     <script>
-        const canvas = document.getElementById('glitchCanvas');
+    (function () {
+        'use strict';
+
+        const canvas = document.getElementById('stage');
         const ctx = canvas.getContext('2d');
+        const statsEl = document.getElementById('stats');
 
-        let width, height;
-        let dots = [];
+        const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const coarse = window.matchMedia('(pointer: coarse)').matches;
 
-        // --- CLICK-DRIVEN GLITCH LEVEL ---
-        let glitchLevel = 0;
-        const maxGlitchLevel = 15; // Increased for ultimate chaos mode
-        
-        // --- ACCESSIBILITY: RESPECT REDUCED MOTION PREFERENCE ---
-        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        
-        // --- BROKEN SCREEN EASTER EGG ---
-        let brokenState = {
-            isTriggered: false,
-            cracks: [],
-            smokeParticles: [],
-            sparks: [],
-            inputBuffer: '',
-            crackAnimationProgress: 0,
-            lastSparkTime: 0,
-            shakeIntensity: 0,
-            shakeDecay: 0.95
-        };
+        const FG = '#EAEAEA';
+        const BG = '#08080A';
+        const CYAN = 'rgba(0, 255, 255, 0.8)';
+        const MAGENTA = 'rgba(255, 0, 255, 0.8)';
+        const GREEN = '#3BFF71';
+        const MONO = 'ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace';
+        const DISPLAY = '"TASA Orbiter", "Avenir Next", "Segoe UI", sans-serif';
+        const TAG_FG = '#B4B4BC';    // tagline sits between the dots (bright) and the stats line (dim)
 
-        // --- CHAOS MODE (Level 8+) ---
-        let chaosMode = {
-            isActive: false,
-            startTime: 0,
-            intensity: 0,
-            maxIntensity: 50,
-            chaosEffects: {
-                screenTear: 0,
-                pixelNoise: 0,
-                colorInversion: 0,
-                screenMelt: 0,
-                digitalRain: [],
-                glitchText: [],
-                explosionParticles: []
-            }
-        };
+        const MSG_MAIN = 'we make software';
 
-        // --- BASE SETTINGS (for Glitch Level 1) ---
-        const config = {
-            dotRadius: 12,
-            dotColor: '#EAEAEA',
-            dotSpacingX: 50,
-            dotSpacingY: 50,
-            textContent: "we make software",
-            textFont: '24px "Courier New", Courier, monospace',
-            textColor: '#EAEAEA',
-            glitchColor1: 'rgba(0, 255, 255, 0.8)',
-            glitchColor2: 'rgba(255, 0, 255, 0.8)',
-            backgroundAlpha: 0.6,
-            
-            // Base values for glitch effects. These will be multiplied by the glitchLevel.
-            base: {
-                dotGlitchChance: 0.1,
-                dotGlitchIntensity: 5,
-                textGlitchChance: 0.1,
-                textGlitchIntensity: 2,
-                scanlineChance: 0.05,
-                scanlineIntensity: 10,
-                blockScrambleChance: 0.05,
-                blockScrambleCount: 2,
-                vJumpChance: 0.03,
-                vJumpIntensity: 2,
-                colorFlashChance: 0.01,
-                // No more distracting green flashes
-                flashColor: 'rgba(0, 0, 0, 0)', // Disabled completely
-                // Flash frequency limiter (max 3 per second at 60fps = 0.05 chance per frame)
-                maxFlashChance: 0.05
-            }
-        };
+        // ── The crash logs (green terminal, after the chaos peak) ──
+        // A different one plays each time. All of them end with 'ok.'
+        const LOGS = [
+            [
+                { txt: 'panic: unexpected dot at position 8', pre: 0 },
+                { txt: '', pre: 120 },
+                { txt: '$ git blame', pre: 380 },
+                { txt: 'fatal: it was you', pre: 260 },
+                { txt: '', pre: 120 },
+                { txt: '$ make it stop', pre: 520 },
+                { txt: "make: *** no rule to make target 'stop'.", pre: 180 },
+                { txt: '', pre: 120 },
+                { txt: '$ reboot', pre: 640 },
+                { txt: 'ok.', pre: 320 }
+            ],
+            [
+                { txt: 'segmentation fault (core dumped)', pre: 0 },
+                { txt: '', pre: 120 },
+                { txt: '$ reboot', pre: 420 },
+                { txt: 'reboot: permission denied', pre: 220 },
+                { txt: '', pre: 120 },
+                { txt: '$ sudo reboot', pre: 520 },
+                { txt: '[sudo] password for visitor:', pre: 200 },
+                { txt: '········', pre: 380 },
+                { txt: '', pre: 120 },
+                { txt: 'ok.', pre: 420 }
+            ],
+            [
+                { txt: 'error: dot 8 is not responding', pre: 0 },
+                { txt: '', pre: 120 },
+                { txt: 'force quit? [Y/n] y', pre: 520 },
+                { txt: 'unsaved changes will be lost. continue? [Y/n] y', pre: 420 },
+                { txt: 'really? [Y/n] Y', pre: 520 },
+                { txt: '', pre: 120 },
+                { txt: 'rebooting…', pre: 420 },
+                { txt: 'ok.', pre: 320 }
+            ],
+            [
+                { txt: 'kernel panic: dot overflow at position 8', pre: 0 },
+                { txt: '', pre: 120 },
+                { txt: '$ reboot', pre: 380 },
+                { txt: 'sh: reboot: command not found', pre: 200 },
+                { txt: '', pre: 120 },
+                { txt: '$ ls', pre: 460 },
+                { txt: 'reboot.sh', pre: 180 },
+                { txt: '', pre: 120 },
+                { txt: '$ ./reboot.sh', pre: 460 },
+                { txt: 'ok.', pre: 320 }
+            ]
+        ];
+        const CHAR_MS = 16;
 
-        class Dot {
-            constructor(baseX, baseY) { this.baseX = baseX; this.baseY = baseY; this.x = baseX; this.y = baseY; this.radius = config.dotRadius; }
-            draw() { ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2); ctx.fillStyle = config.dotColor; ctx.fill(); }
-            glitch(level) {
-                if (Math.random() < config.base.dotGlitchChance * level) {
-                    const intensity = config.base.dotGlitchIntensity * level;
-                    this.x = this.baseX + (Math.random() - 0.5) * intensity;
-                    this.y = this.baseY + (Math.random() - 0.5) * intensity;
-                } else { this.x = this.baseX; this.y = this.baseY; }
-                if (Math.random() < (config.base.dotGlitchChance / 2) * level) { this.drawAberration(config.glitchColor1, -4); this.drawAberration(config.glitchColor2, 4); }
-            }
-            drawAberration(color, offset) { ctx.beginPath(); ctx.arc(this.x + (Math.random() - 0.5) * offset, this.y + (Math.random() - 0.5) * offset, this.radius, 0, Math.PI * 2); ctx.fillStyle = color; ctx.fill(); }
-            reset() { this.x = this.baseX; this.y = this.baseY; }
+        function buildSched(log) {
+            let t = 350;
+            const s = log.map(l => {
+                t += l.pre;
+                const start = t;
+                t += l.txt.length * CHAR_MS;
+                return { txt: l.txt, start: start };
+            });
+            s.total = t + 900;   // hold on the blinking cursor before reboot
+            return s;
         }
 
-        // --- BROKEN SCREEN EFFECT CLASSES ---
-        class CrackLine {
-            constructor(startX, startY, angle, length, thickness) {
-                this.startX = startX;
-                this.startY = startY;
-                this.angle = angle;
-                this.maxLength = length;
-                this.thickness = thickness;
-                this.currentLength = 0;
-                this.branches = [];
-                this.isComplete = false;
-            }
-            
-            update() {
-                if (!this.isComplete) {
-                    this.currentLength += Math.random() * 8 + 2;
-                    if (this.currentLength >= this.maxLength) {
-                        this.currentLength = this.maxLength;
-                        this.isComplete = true;
-                        // Create branches
-                        if (Math.random() < 0.7 && this.branches.length < 3) {
-                            const branchAngle = this.angle + (Math.random() - 0.5) * Math.PI * 0.8;
-                            const branchLength = this.maxLength * (0.3 + Math.random() * 0.4);
-                            const endX = this.startX + Math.cos(this.angle) * this.currentLength;
-                            const endY = this.startY + Math.sin(this.angle) * this.currentLength;
-                            this.branches.push(new CrackLine(endX, endY, branchAngle, branchLength, this.thickness * 0.7));
-                        }
-                    }
-                }
-                this.branches.forEach(branch => branch.update());
-            }
-            
-            render() {
-                if (this.currentLength > 0) {
-                    const endX = this.startX + Math.cos(this.angle) * this.currentLength;
-                    const endY = this.startY + Math.sin(this.angle) * this.currentLength;
-                    
-                    ctx.strokeStyle = `rgba(20, 20, 20, 0.9)`;
-                    ctx.lineWidth = this.thickness;
-                    ctx.lineCap = 'round';
-                    ctx.beginPath();
-                    ctx.moveTo(this.startX, this.startY);
-                    ctx.lineTo(endX, endY);
-                    ctx.stroke();
-                    
-                    // Add glow effect
-                    ctx.strokeStyle = `rgba(60, 60, 60, 0.3)`;
-                    ctx.lineWidth = this.thickness * 2;
-                    ctx.stroke();
-                }
-                this.branches.forEach(branch => branch.render());
+        let sched = buildSched(LOGS[0]);
+        let lastLogIdx = -1;
+
+        // green fragments that bleed into the late peak
+        const FRAGS = ['panic:', '0x0008', 'SIGSEGV', 'core dumped', 'at grid.js:8', '[FAILED]', 'oom: dot 8'];
+
+        // ── Layout ──
+        let W, H, DPR, S, R, CX, CY, TEXT_Y, FONT_PX, TAG_PX, SNAP;
+        let slots = [];              // 9 grid positions; index 7 is the empty socket
+        const SOCKET = 7;            // the eighth dot (bottom-middle). Nine stays empty — we're called Eight.
+
+        function layout() {
+            DPR = Math.min(window.devicePixelRatio || 1, 2);
+            W = window.innerWidth;
+            H = window.innerHeight;
+            canvas.width = Math.round(W * DPR);
+            canvas.height = Math.round(H * DPR);
+            canvas.style.width = W + 'px';
+            canvas.style.height = H + 'px';
+            ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+            S = Math.round(Math.min(32, Math.max(22, Math.min(W, H) * 0.0425)));
+            R = S * (10 / 34);       // real logo proportions (r10 / 34u spacing)
+            SNAP = Math.max(S * 0.9, 30);
+            CX = Math.round(W / 2);
+            CY = Math.round(H / 2 - S * 0.35);
+            TEXT_Y = Math.round(CY + S + R + Math.max(44, S * 1.4));
+            FONT_PX = Math.max(12, Math.round(S * 0.42));
+            TAG_PX = Math.max(15, Math.round(S * 0.56));
+
+            slots = [];
+            for (let i = 0; i < 9; i++) {
+                const col = i % 3, row = Math.floor(i / 3);
+                slots.push({ x: CX + (col - 1) * S, y: CY + (row - 1) * S });
             }
         }
 
-        class SmokeParticle {
-            constructor(x, y) {
-                this.x = x;
-                this.y = y;
-                this.vx = (Math.random() - 0.5) * 3;
-                this.vy = -Math.random() * 4 - 2;
-                this.size = Math.random() * 30 + 10;
-                this.maxSize = this.size * (3 + Math.random() * 4);
-                this.alpha = 0.9;
-                this.life = 1.0;
-                this.decay = 0.003 + Math.random() * 0.007;
-                this.turbulence = Math.random() * 0.04;
-                this.rotation = Math.random() * Math.PI * 2;
-                this.rotationSpeed = (Math.random() - 0.5) * 0.02;
-                this.scaleX = 0.8 + Math.random() * 0.4;
-                this.scaleY = 0.8 + Math.random() * 0.4;
-                this.wispiness = Math.random() * 0.3 + 0.2;
+        // ── State ──
+        // phase: idle | snapping | show | eject
+        const state = {
+            phase: 'idle',
+            phaseT0: 0,
+            snapFrom: null,
+            ejectTo: null,       // null → fade out in place
+            armed: true,         // guards against instant re-trigger while the pointer still sits in the socket
+            completions: 0
+        };
+
+        const pointer = { x: -200, y: -200, seen: false, overUI: false, down: false };
+        const dot = { x: -200, y: -200, alpha: 0, targetAlpha: 0 };
+
+        // ── Show timeline (ms after snap) ──
+        const T_PULSE = 650;
+        const T_STILL = 1500;
+        const T_BUILD_END = 4200;                       // level ramps 0→10
+        const T_PEAK_END = 8600;                        // grid detonates, everything goes
+        const T_TERM = T_PEAK_END;                      // hard cut to the green terminal
+        const ASSEMBLE_STAG = 85, ASSEMBLE_DUR = 680;
+        const TYPE_MS = 48;
+        const T_REDUCED_END = 3200;
+
+        // tail of the timeline depends on which crash log is playing
+        const tl = { assemble: 0, assemEnd: 0, typeStart: 0, typeEnd: 0, showEnd: 0 };
+
+        function computeTail() {
+            tl.assemble = T_TERM + sched.total;          // dots fly back in
+            tl.assemEnd = tl.assemble + ASSEMBLE_DUR + 7 * ASSEMBLE_STAG;
+            tl.typeStart = tl.assemEnd + 200;
+            tl.typeEnd = tl.typeStart + MSG_MAIN.length * TYPE_MS;
+            tl.showEnd = tl.typeEnd + 500;
+        }
+        computeTail();
+
+        const SCATTER = [
+            [-3.2, -3.9], [0.7, -4.6], [3.6, -2.9],
+            [-4.3, 1.1], [0, 0], [4.6, 0.7],
+            [-2.9, 4.3], [2.1, 3.6]
+        ];
+
+        // ── Helpers ──
+        const rand = n => Math.random() * n;
+        const clamp01 = t => Math.max(0, Math.min(1, t));
+        const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
+        const easeInQuad = t => t * t;
+        const easeInOutCubic = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+        const easeOutBack = t => { const c = 1.70158; return 1 + (c + 1) * Math.pow(t - 1, 3) + c * Math.pow(t - 1, 2); };
+        const dist = (ax, ay, bx, by) => Math.hypot(ax - bx, ay - by);
+
+        // Self-copy a slice of the canvas (source coords are device px).
+        function slice(sx, sy, sw, sh, dx, dy) {
+            sw = Math.max(1, sw); sh = Math.max(1, sh);
+            sy = Math.max(0, Math.min(H - sh, sy));
+            ctx.drawImage(canvas, sx * DPR, sy * DPR, sw * DPR, sh * DPR, dx, dy, sw, sh);
+        }
+
+        function setFont(px, weight) {
+            ctx.font = (weight || 500) + ' ' + (px || FONT_PX) + 'px ' + MONO;
+            try { ctx.letterSpacing = ((px || FONT_PX) * 0.08).toFixed(1) + 'px'; } catch (e) { /* older engines */ }
+        }
+
+        function setDisplayFont(px, weight) {
+            ctx.font = (weight || 500) + ' ' + px + 'px ' + DISPLAY;
+            try { ctx.letterSpacing = '0px'; } catch (e) { /* older engines */ }
+        }
+
+        function scrambleText(str) {
+            const GLYPHS = '01<>/\\#*{}!?';
+            const chars = str.split('');
+            const n = 1 + Math.floor(rand(3));
+            for (let i = 0; i < n; i++) {
+                const p = Math.floor(rand(chars.length));
+                if (chars[p] !== ' ') chars[p] = GLYPHS[Math.floor(rand(GLYPHS.length))];
             }
-            
-            update() {
-                this.x += this.vx;
-                this.y += this.vy;
-                this.vx += (Math.random() - 0.5) * this.turbulence;
-                this.vy += (Math.random() - 0.5) * this.turbulence * 0.3;
-                this.vy *= 0.99; // Slight deceleration
-                this.size = Math.min(this.size + 0.8, this.maxSize);
-                this.life -= this.decay;
-                this.alpha = this.life * 0.7;
-                this.rotation += this.rotationSpeed;
-                return this.life > 0;
+            return chars.join('');
+        }
+
+        function drawDot(x, y, radius, alpha) {
+            ctx.globalAlpha = alpha;
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, Math.PI * 2);
+            ctx.fillStyle = FG;
+            ctx.fill();
+            ctx.globalAlpha = 1;
+        }
+
+        function drawAberratedDot(x, y, radius, level) {
+            const off = Math.min(14, level * 1.2);
+            ctx.globalAlpha = 0.7;
+            ctx.beginPath(); ctx.arc(x - off, y, radius, 0, Math.PI * 2); ctx.fillStyle = CYAN; ctx.fill();
+            ctx.beginPath(); ctx.arc(x + off, y, radius, 0, Math.PI * 2); ctx.fillStyle = MAGENTA; ctx.fill();
+            ctx.globalAlpha = 1;
+        }
+
+        // ── Ghost socket (the dotted outline waiting for dot #8) ──
+        let dashOffset = 0;
+
+        function drawSocket(now, proximity) {
+            const slot = slots[SOCKET];
+            let alpha = 0.5 + proximity * 0.4;
+            let radius = R;
+
+            if (coarse && !reduced) {
+                // gentle invitation pulse on touch devices
+                const p = 0.5 + 0.5 * Math.sin(now / 1200 * Math.PI * 2);
+                alpha = 0.42 + 0.2 * p;
+                radius = R * (1 + 0.05 * p);
             }
-            
-            render() {
-                if (this.alpha > 0) {
-                    ctx.save();
-                    ctx.translate(this.x, this.y);
-                    ctx.rotate(this.rotation);
-                    ctx.scale(this.scaleX, this.scaleY);
-                    
-                    // Create multiple overlapping gradients for wispy effect
-                    for (let i = 0; i < 3; i++) {
-                        const offsetX = (Math.random() - 0.5) * this.size * 0.3;
-                        const offsetY = (Math.random() - 0.5) * this.size * 0.3;
-                        const wispSize = this.size * (0.6 + i * 0.2);
-                        const wispAlpha = this.alpha * (0.4 - i * 0.1);
-                        
-                        const gradient = ctx.createRadialGradient(offsetX, offsetY, 0, offsetX, offsetY, wispSize);
-                        gradient.addColorStop(0, `rgba(80, 80, 80, ${wispAlpha})`);
-                        gradient.addColorStop(0.3, `rgba(60, 60, 60, ${wispAlpha * 0.8})`);
-                        gradient.addColorStop(0.7, `rgba(40, 40, 40, ${wispAlpha * 0.4})`);
-                        gradient.addColorStop(1, `rgba(20, 20, 20, 0)`);
-                        
-                        ctx.fillStyle = gradient;
-                        ctx.beginPath();
-                        ctx.arc(offsetX, offsetY, wispSize, 0, Math.PI * 2);
-                        ctx.fill();
-                    }
-                    
-                    ctx.restore();
+
+            ctx.save();
+            ctx.strokeStyle = 'rgba(234, 234, 234, ' + alpha.toFixed(3) + ')';
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([4, 6]);
+            ctx.lineDashOffset = dashOffset;
+            ctx.beginPath();
+            ctx.arc(slot.x, slot.y, radius, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        // ── Tagline ──
+        function drawText(text, level, opts) {
+            opts = opts || {};
+            setDisplayFont(TAG_PX, 500);
+            ctx.textBaseline = 'middle';
+
+            let display = (level > 6 && Math.random() < 0.3) ? scrambleText(text) : text;
+
+            const fullW = ctx.measureText(opts.anchor || display).width;
+            const x0 = CX - fullW / 2;
+            ctx.textAlign = 'left';
+
+            if (level > 0 && Math.random() < 0.12 * level) {
+                const i = level * 1.6;
+                ctx.fillStyle = CYAN;
+                ctx.fillText(display, x0 + (Math.random() - 0.5) * i, TEXT_Y + (Math.random() - 0.5) * i);
+                ctx.fillStyle = MAGENTA;
+                ctx.fillText(display, x0 + (Math.random() - 0.5) * i, TEXT_Y + (Math.random() - 0.5) * i);
+            }
+
+            ctx.fillStyle = TAG_FG;
+            ctx.fillText(display, x0, TEXT_Y);
+
+            if (opts.caret) {
+                const w = ctx.measureText(display).width;
+                const on = opts.caretBlink ? (Math.floor(performance.now() / 500) % 2 === 0) : true;
+                if (on) ctx.fillRect(x0 + w + TAG_PX * 0.15, TEXT_Y - TAG_PX * 0.55, TAG_PX * 0.5, TAG_PX * 1.1);
+            }
+        }
+
+        // ── Build-phase glitches ──
+        function fxScanline(level) {
+            if (Math.random() < 0.06 * level) {
+                const y = rand(H), h = 1 + rand(10);
+                slice(0, y, W, h, (Math.random() - 0.5) * 12 * level, y);
+            }
+        }
+
+        function fxVJump(level) {
+            if (Math.random() < 0.02 * level) {
+                slice(0, 0, W, H, 0, (Math.random() - 0.5) * level * 2);
+            }
+        }
+
+        function fxNoise(level, chance) {
+            // monochrome interference patches — no random RGB confetti
+            if (level > 5 && Math.random() < chance) {
+                const n = 3 + Math.floor(rand(8));
+                for (let i = 0; i < n; i++) {
+                    const g = 30 + Math.floor(rand(80));
+                    ctx.fillStyle = 'rgba(' + g + ',' + g + ',' + (g + 6) + ',0.8)';
+                    ctx.fillRect(rand(W), rand(H), 14 + rand(60), 6 + rand(34));
                 }
             }
         }
 
-        class SparkEffect {
-            constructor(x, y) {
-                this.x = x;
-                this.y = y;
-                this.branches = [];
-                this.life = 1.0;
-                this.decay = 0.05;
-                
-                // Create spark branches
-                const branchCount = 3 + Math.floor(Math.random() * 4);
-                for (let i = 0; i < branchCount; i++) {
-                    const angle = (Math.PI * 2 / branchCount) * i + Math.random() * 0.5;
-                    const length = 10 + Math.random() * 20;
-                    this.branches.push({
-                        angle: angle,
-                        length: length,
-                        segments: this.generateSegments(length)
+        // ── Dot rain — the sky rains dots, not Matrix glyphs ──
+        let rain = [];
+
+        function updateRain(spawnRate, dtMs) {
+            for (let i = 0; i < spawnRate; i++) {
+                if (rain.length < 120 && Math.random() < 0.8) {
+                    rain.push({
+                        x: rand(W), y: -10,
+                        v: 260 + rand(520),
+                        r: 1.5 + rand(3),
+                        a: 0.25 + rand(0.55)
                     });
                 }
             }
-            
-            generateSegments(length) {
-                const segments = [];
-                let currentLength = 0;
-                while (currentLength < length) {
-                    const segmentLength = 2 + Math.random() * 4;
-                    const offset = (Math.random() - 0.5) * 3;
-                    segments.push({ length: segmentLength, offset: offset });
-                    currentLength += segmentLength;
-                }
-                return segments;
+            rain = rain.filter(p => (p.y += p.v * dtMs / 1000) < H + 12);
+            rain.forEach(p => drawDot(p.x, p.y, p.r, p.a));
+        }
+
+        // ── Chaos peak: the grid detonates ──
+        const chaos = { on: false, dots: [], rollV: 0 };
+
+        function initChaos() {
+            chaos.on = true;
+            chaos.rollV = 0;
+            chaos.dots = [];
+            for (let i = 0; i < 8; i++) {
+                const sl = slots[i];
+                const ang = Math.atan2(sl.y - CY, sl.x - CX) + (Math.random() - 0.5) * 0.8;
+                const sp = 200 + rand(480);
+                chaos.dots.push({ x: sl.x, y: sl.y, vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp, r: R, main: true });
             }
-            
-            update() {
-                this.life -= this.decay;
-                return this.life > 0;
-            }
-            
-            render() {
-                if (this.life > 0) {
-                    const colors = ['#FFFFFF', '#00FFFF', '#FFFF00'];
-                    const color = colors[Math.floor(Math.random() * colors.length)];
-                    
-                    ctx.strokeStyle = color;
-                    ctx.lineWidth = 2;
-                    ctx.lineCap = 'round';
-                    ctx.globalAlpha = this.life;
-                    
-                    this.branches.forEach(branch => {
-                        let currentX = this.x;
-                        let currentY = this.y;
-                        
-                        ctx.beginPath();
-                        ctx.moveTo(currentX, currentY);
-                        
-                        branch.segments.forEach(segment => {
-                            const nextX = currentX + Math.cos(branch.angle) * segment.length + segment.offset;
-                            const nextY = currentY + Math.sin(branch.angle) * segment.length + segment.offset;
-                            ctx.lineTo(nextX, nextY);
-                            currentX = nextX;
-                            currentY = nextY;
-                        });
-                        
-                        ctx.stroke();
-                    });
-                    
-                    ctx.globalAlpha = 1;
-                }
+            for (let i = 0; i < 36; i++) {
+                const ang = rand(Math.PI * 2), sp = 260 + rand(700);
+                chaos.dots.push({ x: CX, y: CY, vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp, r: 1.5 + rand(5), main: false });
             }
         }
 
-        // --- CHAOS MODE FUNCTIONS ---
-        function initializeChaosMode() {
-            chaosMode.isActive = true;
-            chaosMode.startTime = Date.now();
-            chaosMode.intensity = 0;
-            
-            // Initialize digital rain - reduced for performance
-            chaosMode.chaosEffects.digitalRain = [];
-            for (let i = 0; i < 15; i++) { // Reduced from 50 to 15
-                chaosMode.chaosEffects.digitalRain.push({
-                    x: Math.random() * width,
-                    y: Math.random() * height - height,
-                    speed: 3 + Math.random() * 6,
-                    char: String.fromCharCode(33 + Math.floor(Math.random() * 94)),
-                    alpha: Math.random()
-                });
+        function renderPeak(t, dtMs) {
+            const p = clamp01((t - T_BUILD_END) / (T_PEAK_END - T_BUILD_END));
+            const dt = dtMs / 1000;
+            const level = 10 + p * 6;
+
+            if (!chaos.on) initChaos();
+
+            // trail
+            ctx.fillStyle = 'rgba(8, 8, 10, 0.22)';
+            ctx.fillRect(0, 0, W, H);
+
+            ctx.save();
+            const shake = 4 + p * 12;
+            ctx.translate((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake);
+
+            // detonation shockwave (first 500ms of peak)
+            if (t - T_BUILD_END < 500) {
+                const q = (t - T_BUILD_END) / 500;
+                ctx.globalAlpha = (1 - q) * 0.7;
+                ctx.strokeStyle = FG;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(CX, CY, easeOutCubic(q) * Math.max(W, H) * 0.5, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.globalAlpha = 1;
             }
-            
-            // No multiple text instances - keep it clean
-            chaosMode.chaosEffects.glitchText = [];
-        }
-        
-        function updateChaosMode() {
-            if (!chaosMode.isActive) return;
-            
-            const elapsed = Date.now() - chaosMode.startTime;
-            chaosMode.intensity = Math.min(elapsed / 100, chaosMode.maxIntensity); // Ramp up over 5 seconds
-            
-            // Update digital rain
-            chaosMode.chaosEffects.digitalRain.forEach(drop => {
-                drop.y += drop.speed;
-                if (drop.y > height + 50) {
-                    drop.y = -50;
-                    drop.x = Math.random() * width;
-                    drop.char = String.fromCharCode(33 + Math.floor(Math.random() * 94));
-                }
-                drop.alpha = 0.3 + Math.random() * 0.7;
+
+            // loose dots with physics
+            chaos.dots.forEach(d => {
+                d.x += d.vx * dt; d.y += d.vy * dt;
+                if ((d.x < d.r && d.vx < 0) || (d.x > W - d.r && d.vx > 0)) d.vx *= -0.92;
+                if ((d.y < d.r && d.vy < 0) || (d.y > H - d.r && d.vy > 0)) d.vy *= -0.92;
+                if (Math.random() < 0.06) { d.vx += (Math.random() - 0.5) * 600; d.vy += (Math.random() - 0.5) * 600; }
+                const rr = d.r * (0.7 + Math.random() * 0.8);
+                if (d.main && Math.random() < 0.5) drawAberratedDot(d.x, d.y, rr, level);
+                drawDot(d.x, d.y, rr, d.main ? 1 : 0.4 + Math.random() * 0.5);
             });
-            
-            // No glitch text to update
-            
-            // Update chaos effects intensities
-            chaosMode.chaosEffects.screenTear = Math.random() * chaosMode.intensity;
-            chaosMode.chaosEffects.pixelNoise = Math.random() * chaosMode.intensity;
-            chaosMode.chaosEffects.colorInversion = Math.random() * chaosMode.intensity;
-            chaosMode.chaosEffects.screenMelt = Math.random() * chaosMode.intensity;
-        }
-        
-        function renderChaosMode() {
-            if (!chaosMode.isActive) return;
-            
-            // Screen tear effect - optimized
-            if (chaosMode.chaosEffects.screenTear > 10 && Math.random() < 0.3) { // Only 30% chance per frame
-                for (let i = 0; i < 3; i++) { // Reduced from 5 to 3
-                    const y = Math.random() * height;
-                    const h = 5 + Math.random() * 15; // Smaller tears
-                    const offset = (Math.random() - 0.5) * chaosMode.chaosEffects.screenTear * 0.5; // Reduced intensity
-                    ctx.drawImage(canvas, 0, y, width, h, offset, y, width, h);
-                }
-            }
-            
-            // Pixel noise - much more efficient
-            if (chaosMode.chaosEffects.pixelNoise > 15 && Math.random() < 0.1) { // Only 10% chance, higher threshold
-                // Create small noise patches instead of full screen
-                for (let i = 0; i < 5; i++) {
-                    const x = Math.random() * width;
-                    const y = Math.random() * height;
-                    const w = 20 + Math.random() * 40;
-                    const h = 20 + Math.random() * 40;
-                    
-                    ctx.fillStyle = `rgb(${Math.random() * 255}, ${Math.random() * 255}, ${Math.random() * 255})`;
-                    ctx.fillRect(x, y, w, h);
-                }
-            }
-            
-            // Color inversion flashes - DISABLED to remove white flashes
-            // if (chaosMode.chaosEffects.colorInversion > 25 && Math.random() < 0.05) {
-            //     ctx.globalCompositeOperation = 'difference';
-            //     ctx.fillStyle = 'white';
-            //     ctx.fillRect(0, 0, width, height);
-            //     ctx.globalCompositeOperation = 'source-over';
-            // }
-            
-            // Digital rain
-            ctx.font = '14px monospace';
-            chaosMode.chaosEffects.digitalRain.forEach(drop => {
-                ctx.globalAlpha = drop.alpha;
-                ctx.fillStyle = '#00FF00';
-                ctx.fillText(drop.char, drop.x, drop.y);
-            });
-            ctx.globalAlpha = 1;
-            
-            // No glitch text to render
-            ctx.globalAlpha = 1;
-            
-            // Screen melt effect
-            if (chaosMode.chaosEffects.screenMelt > 15) {
-                for (let i = 0; i < 10; i++) {
-                    const x = Math.random() * width;
-                    const y = Math.random() * height * 0.8;
-                    const w = 20 + Math.random() * 100;
-                    const h = 10 + Math.random() * 50;
-                    const meltOffset = Math.random() * chaosMode.chaosEffects.screenMelt;
-                    ctx.drawImage(canvas, x, y, w, h, x, y + meltOffset, w, h);
-                }
-            }
-        }
 
-        function setup() {
-            width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight;
-            dots = [];
-            const centerX = width / 2; const centerY = height / 2;
-            const startX = centerX - config.dotSpacingX; const startY = centerY - config.dotSpacingY - 30;
-            for (let i = 0; i < 3; i++) { dots.push(new Dot(startX + i * config.dotSpacingX, startY)); }
-            for (let i = 0; i < 3; i++) { dots.push(new Dot(startX + i * config.dotSpacingX, startY + config.dotSpacingY)); }
-            for (let i = 0; i < 2; i++) { dots.push(new Dot(startX + i * config.dotSpacingX, startY + 2 * config.dotSpacingY)); }
-        }
+            // tagline, badly
+            drawText(MSG_MAIN, level);
 
-        // --- BROKEN SCREEN FUNCTIONS ---
-        function initializeBrokenScreen() {
-            brokenState.isTriggered = true;
-            brokenState.cracks = [];
-            brokenState.smokeParticles = [];
-            brokenState.sparks = [];
-            brokenState.crackAnimationProgress = 0;
-            brokenState.shakeIntensity = 15; // Initial shake intensity
-            
-            // Create multiple crack origins for dramatic effect
-            const crackOrigins = [
-                { x: width * 0.3, y: height * 0.4 },
-                { x: width * 0.7, y: height * 0.3 },
-                { x: width * 0.5, y: height * 0.6 },
-                { x: width * 0.2, y: height * 0.7 },
-                { x: width * 0.8, y: height * 0.8 }
-            ];
-            
-            crackOrigins.forEach(origin => {
-                // Create main cracks radiating from each origin
-                const crackCount = 4 + Math.floor(Math.random() * 3);
-                for (let i = 0; i < crackCount; i++) {
-                    const angle = (Math.PI * 2 / crackCount) * i + (Math.random() - 0.5) * 0.8;
-                    const length = 100 + Math.random() * 200;
-                    const thickness = 2 + Math.random() * 4;
-                    brokenState.cracks.push(new CrackLine(origin.x, origin.y, angle, length, thickness));
+            // tagline echoes stamped everywhere
+            if (Math.random() < 0.3 + p * 0.55) {
+                const n = 1 + Math.floor(rand(4));
+                for (let i = 0; i < n; i++) {
+                    setDisplayFont(TAG_PX * (1 + rand(3)), 600);
+                    const cols = [FG, CYAN, MAGENTA];
+                    ctx.fillStyle = cols[Math.floor(rand(3))];
+                    ctx.globalAlpha = 0.2 + rand(0.5);
+                    ctx.fillText(scrambleText(MSG_MAIN), rand(W * 0.8), rand(H));
                 }
-            });
-        }
-        
-        function updateBrokenEffects() {
-            if (!brokenState.isTriggered) return;
-            
-            // Update screen shake
-            if (brokenState.shakeIntensity > 0.1) {
-                brokenState.shakeIntensity *= brokenState.shakeDecay;
+                ctx.globalAlpha = 1;
             }
-            
-            // Update cracks
-            brokenState.cracks.forEach(crack => crack.update());
-            
-            // MASSIVELY increase smoke generation for dramatic effect
-            // Spawn smoke particles along crack lines (much more frequent)
-            if (Math.random() < 0.8) { // Increased from 0.3 to 0.8
-                brokenState.cracks.forEach(crack => {
-                    if (Math.random() < 0.4) { // Increased from 0.1 to 0.4
-                        const t = Math.random();
-                        const x = crack.startX + Math.cos(crack.angle) * crack.currentLength * t;
-                        const y = crack.startY + Math.sin(crack.angle) * crack.currentLength * t;
-                        brokenState.smokeParticles.push(new SmokeParticle(x, y));
-                        
-                        // Add extra smoke clusters for density
-                        if (Math.random() < 0.3) {
-                            brokenState.smokeParticles.push(new SmokeParticle(x + (Math.random() - 0.5) * 20, y + (Math.random() - 0.5) * 20));
-                        }
-                    }
-                });
-            }
-            
-            // Add much more random smoke from screen edges and center
-            if (Math.random() < 0.6) { // Increased from 0.2 to 0.6
-                const edge = Math.floor(Math.random() * 4);
-                let x, y;
-                switch(edge) {
-                    case 0: x = Math.random() * width; y = 0; break;
-                    case 1: x = width; y = Math.random() * height; break;
-                    case 2: x = Math.random() * width; y = height; break;
-                    case 3: x = 0; y = Math.random() * height; break;
-                }
-                brokenState.smokeParticles.push(new SmokeParticle(x, y));
-            }
-            
-            // Add smoke from random screen locations for thick coverage
-            if (Math.random() < 0.4) {
-                const x = Math.random() * width;
-                const y = Math.random() * height;
-                brokenState.smokeParticles.push(new SmokeParticle(x, y));
-            }
-            
-            // Update smoke particles
-            brokenState.smokeParticles = brokenState.smokeParticles.filter(particle => particle.update());
-            
-            // Spawn sparks along crack lines (respecting accessibility limits)
-            const now = Date.now();
-            if (now - brokenState.lastSparkTime > 400 && Math.random() < 0.3) { // Max ~2.5 sparks per second
-                brokenState.cracks.forEach(crack => {
-                    if (Math.random() < 0.05) {
-                        const t = Math.random();
-                        const x = crack.startX + Math.cos(crack.angle) * crack.currentLength * t;
-                        const y = crack.startY + Math.sin(crack.angle) * crack.currentLength * t;
-                        brokenState.sparks.push(new SparkEffect(x, y));
-                        brokenState.lastSparkTime = now;
-                    }
-                });
-            }
-            
-            // Update sparks
-            brokenState.sparks = brokenState.sparks.filter(spark => spark.update());
-        }
-        
-        function renderBrokenEffects() {
-            if (!brokenState.isTriggered) return;
-            
-            // Render smoke particles (behind everything)
-            if (!prefersReducedMotion) {
-                brokenState.smokeParticles.forEach(particle => particle.render());
-            }
-            
-            // Render cracks (on top of content)
-            brokenState.cracks.forEach(crack => crack.render());
-            
-            // Render sparks (on top of everything)
-            if (!prefersReducedMotion) {
-                brokenState.sparks.forEach(spark => spark.render());
-            }
-        }
-        
-        function checkForBrokenTrigger(key) {
-            brokenState.inputBuffer += key.toLowerCase();
-            if (brokenState.inputBuffer.length > 10) {
-                brokenState.inputBuffer = brokenState.inputBuffer.slice(-10);
-            }
-            
-            if (brokenState.inputBuffer.includes('broken') && !brokenState.isTriggered) {
-                if (!prefersReducedMotion) {
-                    initializeBrokenScreen();
-                }
-            }
-        }
 
-        function drawText(level) {
-            ctx.font = config.textFont; ctx.textAlign = 'center';
-            const textX = width / 2; const textY = height / 2 + config.dotSpacingY * 2 + 50;
-            if (level > 0 && Math.random() < config.base.textGlitchChance * level) {
-                const intensity = config.base.textGlitchIntensity * level;
-                const xOffset1 = (Math.random() - 0.5) * intensity; const yOffset1 = (Math.random() - 0.5) * intensity; ctx.fillStyle = config.glitchColor1; ctx.fillText(config.textContent, textX + xOffset1, textY + yOffset1);
-                const xOffset2 = (Math.random() - 0.5) * intensity; const yOffset2 = (Math.random() - 0.5) * intensity; ctx.fillStyle = config.glitchColor2; ctx.fillText(config.textContent, textX + xOffset2, textY + yOffset2);
+            // the terminal starts leaking through near the end
+            if (p > 0.7 && Math.random() < 0.35) {
+                setFont(Math.max(12, FONT_PX), 500);
+                ctx.fillStyle = GREEN;
+                ctx.globalAlpha = 0.3 + rand(0.45);
+                ctx.fillText(FRAGS[Math.floor(rand(FRAGS.length))], rand(W * 0.85), rand(H));
+                ctx.globalAlpha = 1;
             }
-            ctx.fillStyle = config.textColor; ctx.fillText(config.textContent, textX, textY);
-        }
 
-        function runGlitches(level) {
-            // Scanlines
-            if (Math.random() < config.base.scanlineChance * level) {
-                const intensity = config.base.scanlineIntensity * level;
-                const y = Math.random() * height; const h = (Math.random() * 10) + 1; const xOffset = (Math.random() - 0.5) * intensity; ctx.drawImage(canvas, 0, y, width, h, xOffset, y, width, h);
-            }
-            // Block Scramble
-            if (Math.random() < config.base.blockScrambleChance * level) {
-                const count = Math.floor(config.base.blockScrambleCount * level);
-                for (let i = 0; i < count; i++) {
-                    const sx = Math.random() * width; const sy = Math.random() * height;
-                    const sw = width * Math.random() * 0.2; const sh = height * Math.random() * 0.1;
-                    const dx = Math.random() * width; const dy = Math.random() * height;
-                    ctx.drawImage(canvas, sx, sy, sw, sh, dx, dy, sw, sh);
-                }
-            }
-            // Vertical Jump
-            if (Math.random() < config.base.vJumpChance * level) {
-                const intensity = config.base.vJumpIntensity * level;
-                const yOffset = (Math.random() - 0.5) * intensity;
-                ctx.drawImage(canvas, 0, 0, width, height, 0, yOffset, width, height);
-            }
-            // Color Flash (capped at 3 flashes per second for accessibility)
-            const flashChance = Math.min(config.base.colorFlashChance * level, config.base.maxFlashChance);
-            if (Math.random() < flashChance) {
-                ctx.fillStyle = config.base.flashColor; ctx.fillRect(0, 0, width, height);
-            }
-        }
-        
-        function animate() {
-            // CHAOS MODE - When glitch level hits 8+, everything goes mental
-            if (chaosMode.isActive) {
-                // Pure black background for maximum chaos contrast
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.1)'; // Slight trail effect
-                ctx.fillRect(0, 0, width, height);
-                
-                // Update and render chaos
-                updateChaosMode();
-                
-                // Render dots with organized chaos
-                dots.forEach(dot => {
-                    // Moderate dot glitching for performance
-                    if (Math.random() < 0.4) { // Reduced from 80% to 40%
-                        dot.glitch(Math.min(chaosMode.intensity * 0.3, 10)); // Cap the intensity
-                    }
-                    dot.draw();
-                    
-                    // Add fewer ghost copies for performance
-                    if (Math.random() < 0.2) { // Only 20% chance per dot
-                        for (let i = 0; i < 2; i++) { // Reduced from 5 to 2 copies
-                            ctx.globalAlpha = 0.4;
-                            ctx.beginPath();
-                            ctx.arc(
-                                dot.x + (Math.random() - 0.5) * 30, // Reduced spread
-                                dot.y + (Math.random() - 0.5) * 30,
-                                dot.radius,
-                                0, Math.PI * 2
-                            );
-                            ctx.fillStyle = '#EAEAEA'; // Use white instead of random colors
-                            ctx.fill();
-                        }
-                    }
-                    ctx.globalAlpha = 1;
-                });
-                
-                // Extreme text glitching
-                drawText(chaosMode.intensity);
-                
-                // Run ALL glitch effects at maximum intensity
-                runGlitches(chaosMode.intensity);
-                
-                // Add chaos-specific effects
-                renderChaosMode();
-                
-                requestAnimationFrame(animate);
-                return;
-            }
-            
-            // Normal mode (levels 1-7)
-            // Apply screen shake if broken and not reduced motion
-            let shakeX = 0, shakeY = 0;
-            if (brokenState.isTriggered && brokenState.shakeIntensity > 0.1 && !prefersReducedMotion) {
-                shakeX = (Math.random() - 0.5) * brokenState.shakeIntensity;
-                shakeY = (Math.random() - 0.5) * brokenState.shakeIntensity;
+            ctx.restore();
+
+            // feedback warp: the frame eats itself
+            if (Math.random() < 0.3) {
                 ctx.save();
-                ctx.translate(shakeX, shakeY);
-            }
-            
-            ctx.fillStyle = `rgba(8, 8, 10, ${config.backgroundAlpha})`;
-            ctx.fillRect(0, 0, width, height);
-
-            // Update broken screen effects first (smoke renders behind everything)
-            updateBrokenEffects();
-            
-            // Render smoke particles behind everything
-            if (brokenState.isTriggered && !prefersReducedMotion) {
-                brokenState.smokeParticles.forEach(particle => particle.render());
+                ctx.translate(CX, CY);
+                ctx.rotate((Math.random() - 0.5) * 0.06 * p);
+                const sc = 1 + (Math.random() - 0.5) * 0.06 * p;
+                ctx.scale(sc, sc);
+                ctx.translate(-CX, -CY);
+                ctx.globalAlpha = 0.8;
+                ctx.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, W, H);
+                ctx.restore();
+                ctx.globalAlpha = 1;
             }
 
-            // Respect reduced motion preference - disable glitch effects but keep basic functionality
-            const hasGlitch = glitchLevel > 0 && !prefersReducedMotion;
-
-            dots.forEach(dot => {
-                if (hasGlitch) { dot.glitch(glitchLevel); } else { dot.reset(); }
-                dot.draw();
-            });
-            drawText(prefersReducedMotion ? 0 : glitchLevel);
-            
-            if (hasGlitch) {
-                runGlitches(glitchLevel);
-            }
-            
-            // Render broken screen effects on top
-            if (brokenState.isTriggered) {
-                // Render cracks on top of content
-                brokenState.cracks.forEach(crack => crack.render());
-                
-                // Render sparks on top of everything
-                if (!prefersReducedMotion) {
-                    brokenState.sparks.forEach(spark => spark.render());
+            // slice storm
+            if (p > 0.1 && Math.random() < 0.85) {
+                const bands = 6 + Math.floor(p * 18);
+                const bh = H / bands;
+                for (let i = 0; i < bands; i++) {
+                    if (Math.random() < 0.7) slice(0, i * bh, W, bh, (Math.random() - 0.5) * (10 + p * 80), i * bh);
                 }
             }
-            
-            // Restore canvas if shake was applied
-            if (brokenState.isTriggered && brokenState.shakeIntensity > 0.1 && !prefersReducedMotion) {
+
+            // vertical roll (V-hold failure)
+            if (Math.random() < 0.08 * p) chaos.rollV = (Math.random() - 0.5) * 1400;
+            chaos.rollV *= 0.94;
+            if (Math.abs(chaos.rollV) > 40) {
+                slice(0, 0, W, H, 0, chaos.rollV * dt * 8);
+            }
+
+            // band inversion flickers (partial-screen, kept brief)
+            if (Math.random() < 0.15 * p) {
+                ctx.save();
+                ctx.globalCompositeOperation = 'difference';
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(0, rand(H), W, 6 + rand(50));
                 ctx.restore();
             }
-            
-            requestAnimationFrame(animate);
+
+            fxNoise(level, 0.5);
+            updateRain(2 + Math.floor(p * 3), dtMs);
         }
 
-        // --- EVENT LISTENERS ---
-        window.addEventListener('resize', setup);
-        window.addEventListener('click', () => {
-            if (!prefersReducedMotion) {
-                glitchLevel = Math.min(glitchLevel + 1, maxGlitchLevel);
-                
-                // TRIGGER CHAOS MODE AT LEVEL 8+ - DIAL TO 11!
-                if (glitchLevel >= 8 && !chaosMode.isActive) {
-                    initializeChaosMode();
+        // ── Green terminal (the crash log) ──
+        function renderTerminal(tt, staticFull) {
+            ctx.fillStyle = '#040604';
+            ctx.fillRect(0, 0, W, H);
+
+            const f = Math.max(13, FONT_PX);
+            setFont(f, 500);
+            try { ctx.letterSpacing = '0px'; } catch (e) {}
+            const lh = Math.round(f * 1.75);
+
+            let maxW = 0;
+            for (const L of sched) maxW = Math.max(maxW, ctx.measureText(L.txt).width);
+            const x0 = Math.max(24, CX - maxW / 2);
+            const y0 = Math.max(56, CY - (sched.length * lh) / 2);
+
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            ctx.shadowColor = GREEN;
+            ctx.shadowBlur = 8;
+            ctx.fillStyle = GREEN;
+
+            let cursorX = x0, cursorY = y0, typing = false;
+            sched.forEach((L, i) => {
+                if (!staticFull && tt < L.start) return;
+                const n = staticFull ? L.txt.length
+                    : Math.min(L.txt.length, Math.floor((tt - L.start) / CHAR_MS));
+                const part = L.txt.slice(0, Math.max(0, n));
+                ctx.globalAlpha = L.txt.charAt(0) === '$' ? 1 : 0.88;
+                const y = y0 + i * lh;
+                if (part) ctx.fillText(part, x0, y);
+                cursorX = x0 + ctx.measureText(part).width;
+                cursorY = y;
+                if (!staticFull && n < L.txt.length) typing = true;
+            });
+            ctx.shadowBlur = 0;
+            ctx.globalAlpha = 1;
+
+            // green block cursor: solid while typing, blinking while thinking
+            const on = staticFull || typing || (Math.floor(tt / 400) % 2 === 0);
+            if (on) {
+                ctx.fillStyle = GREEN;
+                ctx.fillRect(cursorX + f * 0.2, cursorY - f * 0.55, f * 0.55, f * 1.1);
+            }
+
+            // CRT dressing: scanlines + vignette + the odd jitter
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.18)';
+            for (let y = 0; y < H; y += 3) ctx.fillRect(0, y, W, 1);
+
+            const vg = ctx.createRadialGradient(CX, CY, Math.min(W, H) * 0.3, CX, CY, Math.max(W, H) * 0.75);
+            vg.addColorStop(0, 'rgba(0,0,0,0)');
+            vg.addColorStop(1, 'rgba(0,0,0,0.55)');
+            ctx.fillStyle = vg;
+            ctx.fillRect(0, 0, W, H);
+
+            if (!staticFull && Math.random() < 0.06) {
+                const y = rand(H);
+                slice(0, y, W, 2 + rand(6), (Math.random() - 0.5) * 8, y);
+            }
+        }
+
+        // ── Phase transitions ──
+        function beginSnap(fromX, fromY) {
+            state.phase = 'snapping';
+            state.phaseT0 = performance.now();
+            state.snapFrom = { x: fromX, y: fromY };
+            canvas.setAttribute('aria-label', 'Eighth dot placed. Enjoy the show.');
+        }
+
+        function beginShow() {
+            state.phase = 'show';
+            state.phaseT0 = performance.now();
+            state.completions++;
+            rain = [];
+            chaos.on = false;
+
+            // a different crash log each time, never the same one twice running
+            let idx = Math.floor(rand(LOGS.length));
+            if (idx === lastLogIdx) idx = (idx + 1) % LOGS.length;
+            lastLogIdx = idx;
+            sched = buildSched(LOGS[idx]);
+            computeTail();
+
+            if (window.gtag) window.gtag('event', 'eighth_dot_placed', { crash_log: idx });
+        }
+
+        function beginEject() {
+            state.phase = 'eject';
+            state.phaseT0 = performance.now();
+            state.ejectTo = (!coarse && pointer.seen && !pointer.overUI)
+                ? { x: pointer.x, y: pointer.y }
+                : null;
+            canvas.setAttribute('aria-label',
+                'The Eight logo with one dot missing. Press Enter to place the eighth dot.');
+        }
+
+        function backToIdle() {
+            state.phase = 'idle';
+            state.phaseT0 = performance.now();
+            state.armed = false;
+            dot.alpha = (!coarse && pointer.seen) ? 1 : 0;
+            dot.x = pointer.x; dot.y = pointer.y;
+        }
+
+        // ── Render: idle ──
+        function renderIdle(now, dtMs) {
+            ctx.fillStyle = BG;
+            ctx.fillRect(0, 0, W, H);
+
+            const slot = slots[SOCKET];
+
+            // cursor dot follows the pointer
+            if (!coarse && pointer.seen && !pointer.overUI) {
+                const k = reduced ? 1 : Math.min(1, dtMs * 0.018);
+                dot.x += (pointer.x - dot.x) * k;
+                dot.y += (pointer.y - dot.y) * k;
+                dot.targetAlpha = 1;
+            } else if (!pointer.down) {
+                dot.targetAlpha = 0;
+            }
+            dot.alpha += (dot.targetAlpha - dot.alpha) * Math.min(1, dtMs * 0.012);
+
+            const dNear = dist(dot.x, dot.y, slot.x, slot.y);
+            const proximity = dot.alpha > 0.5 ? clamp01(1 - dNear / (S * 3)) : 0;
+
+            dashOffset -= (1 + proximity * 3) * dtMs * 0.012;
+
+            // residents
+            for (let i = 0; i < 7; i++) {
+                const lean = residentLean(i);
+                drawDot(slots[i].x + lean[0], slots[i].y + lean[1], R, residentAlpha(i, now));
+            }
+
+            drawSocket(now, proximity);
+            drawText(MSG_MAIN, 0);
+
+            if (dot.alpha > 0.01) drawDot(dot.x, dot.y, R, dot.alpha);
+
+            // completion: the dot reaches the socket
+            if (!state.armed && (dNear > Math.max(S * 1.5, 50) || dot.alpha < 0.3)) state.armed = true;
+            if (state.armed && dot.alpha > 0.5 && dNear < SNAP) {
+                beginSnap(dot.x, dot.y);
+            }
+        }
+
+        function residentAlpha(i, now) {
+            if (reduced) return 1;
+            return 1 - 0.4 * (0.5 + 0.5 * Math.sin(now / 6000 * Math.PI * 2 + i * 0.9));
+        }
+
+        function residentLean(i) {
+            if (reduced || !pointer.seen) return [0, 0];
+            const s = slots[i];
+            const d = dist(pointer.x, pointer.y, s.x, s.y);
+            if (d > 200 || d < 1) return [0, 0];
+            const k = 2.5 * (1 - d / 200);
+            return [(pointer.x - s.x) / d * k, (pointer.y - s.y) / d * k];
+        }
+
+        // ── Render: snapping (320ms magnetic click into place) ──
+        function renderSnap(now) {
+            const slot = slots[SOCKET];
+            const t = clamp01((now - state.phaseT0) / (reduced ? 1 : 320));
+            const e = easeOutBack(t);
+
+            ctx.fillStyle = BG;
+            ctx.fillRect(0, 0, W, H);
+
+            for (let i = 0; i < 7; i++) drawDot(slots[i].x, slots[i].y, R, residentAlpha(i, now));
+            drawSocket(now, 1);
+            drawText(MSG_MAIN, 0);
+
+            const x = state.snapFrom.x + (slot.x - state.snapFrom.x) * e;
+            const y = state.snapFrom.y + (slot.y - state.snapFrom.y) * e;
+            drawDot(x, y, R, 1);
+
+            if (t >= 1) beginShow();
+        }
+
+        // ── Render: the show ──
+        function renderShow(now, dtMs) {
+            const t = now - state.phaseT0;
+
+            if (reduced) { renderShowReduced(t); return; }
+
+            statsEl.classList.toggle('visible', t < T_STILL || t > tl.assemEnd);
+
+            // ---- Act V: the crash log ----
+            if (t >= T_TERM && t < tl.assemble) {
+                renderTerminal(t - T_TERM, false);
+                return;
+            }
+
+            // ---- Act VI: reboot — reassembly, then the tagline again ----
+            if (t >= tl.assemble) {
+                ctx.fillStyle = BG;
+                ctx.fillRect(0, 0, W, H);
+
+                for (let i = 0; i < 8; i++) {
+                    const st = tl.assemble + i * ASSEMBLE_STAG;
+                    const p = clamp01((t - st) / ASSEMBLE_DUR);
+                    if (p <= 0) continue;
+                    const e = easeOutCubic(p);
+                    const x = slots[i].x + SCATTER[i][0] * S * (1 - e);
+                    const y = slots[i].y + SCATTER[i][1] * S * (1 - e);
+                    drawDot(x, y, R * (0.35 + 0.65 * e), p);
+                }
+
+                if (t > tl.typeStart) {
+                    const n = Math.floor((t - tl.typeStart) / TYPE_MS);
+                    const done = n >= MSG_MAIN.length;
+                    drawText(MSG_MAIN.slice(0, Math.min(MSG_MAIN.length, n)), 0,
+                        { caret: !done, anchor: MSG_MAIN });
+                }
+
+                if (t >= tl.showEnd) beginEject();
+                return;
+            }
+
+            // ---- Act IV: peak — total detonation ----
+            if (t >= T_BUILD_END) {
+                renderPeak(t, dtMs);
+                return;
+            }
+
+            // ---- Acts I–III: pulse → stillness → build-up ----
+            let level = 0, shake = 0;
+            if (t >= T_STILL) {
+                const p = easeInQuad((t - T_STILL) / (T_BUILD_END - T_STILL));
+                level = 10 * p;
+                shake = 4 * p;
+            }
+
+            ctx.fillStyle = BG;
+            ctx.fillRect(0, 0, W, H);
+
+            ctx.save();
+            if (shake > 0.2) ctx.translate((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake);
+
+            for (let i = 0; i < 8; i++) {
+                let x = slots[i].x, y = slots[i].y, a = 1, radius = R;
+
+                if (t < T_PULSE) {
+                    // completion pulse ripples out from the socket
+                    const d = dist(slots[i].x, slots[i].y, slots[SOCKET].x, slots[SOCKET].y);
+                    const delay = d / (3 * S) * 260;
+                    const p = clamp01((t - delay) / 420);
+                    radius = R * (1 + 0.18 * Math.sin(p * Math.PI));
+                } else if (t < T_STILL) {
+                    // uneasy stillness: one dot flickers
+                    if (i === 2 && ((t > 1150 && t < 1230) || (t > 1330 && t < 1400))) a = 0.15;
+                } else {
+                    if (Math.random() < 0.1 * level) {
+                        x += (Math.random() - 0.5) * Math.min(16, level * 4);
+                        y += (Math.random() - 0.5) * Math.min(16, level * 4);
+                    }
+                    if (Math.random() < 0.05 * level) drawAberratedDot(x, y, radius, level);
+                }
+                drawDot(x, y, radius, a);
+            }
+
+            // pulse ripple ring
+            if (t < T_PULSE) {
+                const p = t / T_PULSE;
+                ctx.globalAlpha = (1 - p) * 0.5;
+                ctx.strokeStyle = FG;
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.arc(slots[SOCKET].x, slots[SOCKET].y, R + easeOutCubic(p) * S * 2.2, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.globalAlpha = 1;
+            }
+
+            drawText(MSG_MAIN, level);
+            ctx.restore();
+
+            if (level > 0) {
+                fxScanline(level);
+                fxVJump(level);
+                fxNoise(level, 0.12);
+                updateRain(level > 6 ? 1 : 0, dtMs);
+            }
+        }
+
+        // ── Render: reduced-motion show (no flashing, no shake — just the log) ──
+        function renderShowReduced(t) {
+            if (t >= 400 && t < 2700) {
+                renderTerminal(0, true);
+            } else {
+                ctx.fillStyle = BG;
+                ctx.fillRect(0, 0, W, H);
+                for (let i = 0; i < 8; i++) drawDot(slots[i].x, slots[i].y, R, 1);
+                drawText(MSG_MAIN, 0);
+            }
+            if (t >= T_REDUCED_END) beginEject();
+        }
+
+        // ── Render: eject (dot #8 returns to the visitor) ──
+        function renderEject(now) {
+            const t = clamp01((now - state.phaseT0) / (reduced ? 1 : 480));
+            const slot = slots[SOCKET];
+
+            ctx.fillStyle = BG;
+            ctx.fillRect(0, 0, W, H);
+
+            for (let i = 0; i < 7; i++) drawDot(slots[i].x, slots[i].y, R, residentAlpha(i, now));
+            ctx.globalAlpha = t;
+            drawSocket(now, 0);
+            ctx.globalAlpha = 1;
+            drawText(MSG_MAIN, 0);
+
+            if (state.ejectTo) {
+                const e = easeInOutCubic(t);
+                drawDot(slot.x + (state.ejectTo.x - slot.x) * e,
+                        slot.y + (state.ejectTo.y - slot.y) * e, R, 1);
+            } else {
+                drawDot(slot.x, slot.y, R, 1 - t);
+            }
+
+            if (t >= 1) backToIdle();
+        }
+
+        // ── Main loop ──
+        let last = performance.now();
+
+        function tick(now) {
+            const dtMs = Math.min(50, now - last);
+            last = now;
+
+            if (state.phase === 'idle') renderIdle(now, dtMs);
+            else if (state.phase === 'snapping') renderSnap(now);
+            else if (state.phase === 'show') renderShow(now, dtMs);
+            else if (state.phase === 'eject') renderEject(now);
+
+            requestAnimationFrame(tick);
+        }
+
+        // ── Input ──
+        window.addEventListener('pointermove', (e) => {
+            pointer.x = e.clientX;
+            pointer.y = e.clientY;
+            pointer.seen = true;
+            if (coarse && pointer.down && state.phase === 'idle') {
+                dot.x = e.clientX; dot.y = e.clientY;
+                dot.alpha = 1; dot.targetAlpha = 1;
+            }
+        }, { passive: true });
+
+        canvas.addEventListener('pointerdown', (e) => {
+            if (state.phase !== 'idle') return;
+            pointer.down = true;
+            pointer.x = e.clientX; pointer.y = e.clientY; pointer.seen = true;
+            if (coarse) {
+                const slot = slots[SOCKET];
+                if (dist(e.clientX, e.clientY, slot.x, slot.y) < SNAP) {
+                    beginSnap(e.clientX, e.clientY);
+                } else {
+                    dot.x = e.clientX; dot.y = e.clientY;
+                    dot.alpha = 1; dot.targetAlpha = 1;
                 }
             }
         });
-        
-        // Listen for "broken" typing to trigger screen crack effect
-        window.addEventListener('keydown', (event) => {
-            // Only capture letter keys to avoid issues with special keys
-            if (event.key.length === 1 && event.key.match(/[a-zA-Z]/)) {
-                checkForBrokenTrigger(event.key);
+
+        window.addEventListener('pointerup', () => {
+            pointer.down = false;
+            if (coarse && state.phase === 'idle' && dot.alpha > 0.5) {
+                const slot = slots[SOCKET];
+                if (dist(dot.x, dot.y, slot.x, slot.y) < SNAP) {
+                    beginSnap(dot.x, dot.y);
+                } else {
+                    dot.targetAlpha = 0;
+                }
             }
         });
 
-        // --- START ---
-        setup();
-        animate();
+        document.addEventListener('mouseleave', () => { pointer.seen = false; });
+
+        canvas.addEventListener('keydown', (e) => {
+            if ((e.key === 'Enter' || e.key === ' ') && state.phase === 'idle') {
+                e.preventDefault();
+                const slot = slots[SOCKET];
+                beginSnap(slot.x + S * 4, slot.y + S * 2.5);
+            }
+        });
+
+        // the custom cursor yields to real UI (consent banner)
+        document.addEventListener('pointerover', (e) => {
+            pointer.overUI = !!(e.target.closest && e.target.closest('.consent'));
+        });
+
+        window.addEventListener('resize', layout);
+
+        // ── Start ──
+        layout();
+        if (document.fonts && document.fonts.load) {
+            document.fonts.load('500 ' + TAG_PX + 'px "TASA Orbiter"');
+            document.fonts.load('600 ' + TAG_PX + 'px "TASA Orbiter"');
+        }
+        requestAnimationFrame(tick);
+        setTimeout(() => statsEl.classList.add('visible'), 1600);
+    })();
     </script>
+
+    <!-- Cookie Consent -->
+    <div class="consent" id="consent" role="dialog" aria-label="Cookie consent" aria-describedby="consentDesc">
+        <div class="consent-inner">
+            <p class="consent-text" id="consentDesc">
+                <strong>Want to be tracked by Google?</strong> That's all we use — Google Analytics. Nothing else.
+            </p>
+            <div class="consent-actions">
+                <button class="consent-btn" id="consentDecline">Rather not</button>
+                <button class="consent-btn consent-btn--accept" id="consentAccept">Sure, go ahead</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ── Cookie Consent & Conditional GA ──
+        (function() {
+            var GA_ID = 'G-QGQHJ9SM6G';
+            var CONSENT_KEY = 'eight-analytics';
+            var consent = localStorage.getItem(CONSENT_KEY);
+
+            function loadGA() {
+                if (document.querySelector('script[src*="googletagmanager"]')) return;
+                var s = document.createElement('script');
+                s.async = true;
+                s.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_ID;
+                document.head.appendChild(s);
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                window.gtag = gtag;
+                gtag('js', new Date());
+                gtag('config', GA_ID);
+            }
+
+            function dismissBanner() {
+                var el = document.getElementById('consent');
+                el.classList.add('hiding');
+                el.addEventListener('transitionend', function() {
+                    el.remove();
+                }, { once: true });
+            }
+
+            if (consent === 'yes') {
+                loadGA();
+                var el = document.getElementById('consent');
+                if (el) el.remove();
+                return;
+            }
+            if (consent === 'no') {
+                var el = document.getElementById('consent');
+                if (el) el.remove();
+                return;
+            }
+
+            setTimeout(function() {
+                var el = document.getElementById('consent');
+                if (el) el.classList.add('visible');
+            }, 1500);
+
+            document.getElementById('consentAccept').addEventListener('click', function() {
+                localStorage.setItem(CONSENT_KEY, 'yes');
+                loadGA();
+                dismissBanner();
+            });
+
+            document.getElementById('consentDecline').addEventListener('click', function() {
+                localStorage.setItem(CONSENT_KEY, 'no');
+                dismissBanner();
+            });
+        })();
+    </script>
+
 </body>
 </html>
